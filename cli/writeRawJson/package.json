@@ -1,0 +1,4 @@
+{
+    "Name": "WriteRawJson",
+    "Entry": "{.}/tscl.exe run {.}/main.ts --input {Input} --output {Output} --logger {Logger}"
+}

@@ -1,0 +1,20 @@
+{
+    "Parameters": {
+        "globalJsonPath": "$locate(`appdata/global.json`)",
+        "globalJson": "$Json.Load(globalJsonPath)",
+        "urlPrefix": "$`http://localhost:`+globalJson.port[Environment.UserName].lsport",
+        "Input": "",
+        "PluginName": ""
+    },
+    "Method": "POST",
+    "Url": "$urlPrefix+`/TaskService/LocalRun`",
+    "Body": {
+        "data": {
+            "Input": "$Input",
+            "Processor": {
+                "Type": "Plugin",
+                "Name": "$PluginName"
+            }
+        }
+    }
+}

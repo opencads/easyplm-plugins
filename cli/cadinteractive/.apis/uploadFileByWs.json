@@ -1,0 +1,17 @@
+{
+    "Parameters": {
+        "globalJsonPath": "$locate(`appdata/global.json`)",
+        "globalJson": "$Json.Load(globalJsonPath)",
+        "urlPrefix": "$`http://localhost:`+globalJson.port[Environment.UserName].uiport",
+        "workspaceOid": "",
+        "docIdArr": [],
+        "attachmentIdArr": []
+    },
+    "Method": "POST",
+    "Url": "$urlPrefix+`/api/v1/uploadFileByWs`",
+    "Body": {
+        "workspaceOid": "$workspaceOid",
+        "docIdArr": "$docIdArr",
+        "attachmentIdArr": "$attachmentIdArr"
+    }
+}
