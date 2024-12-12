@@ -53,7 +53,7 @@ let formatAgentName = (agentName: string) => {
 let main = async () => {
     let input = await Json.LoadAsync(inputPath);
     let pluginName = formatAgentName(input.Agent.Name) + "CADInteractive";
-    let response = await apis.runAsync("localrun", {
+    let response = await apis.runAsync("run", {
         PluginName: pluginName,
         Input: input
     });

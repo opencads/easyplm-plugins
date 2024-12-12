@@ -1,0 +1,16 @@
+{
+    "Parameters": {
+        "urlPrefix": "http://localhost:19799",
+        "Input": "",
+        "PluginName": ""
+    },
+    "Method": "POST",
+    "Url": "$urlPrefix+`/api/v1/tasks/run`",
+    "Body": {
+        "Input": "$Input",
+        "Processor": {
+            "Type": "Plugin",
+            "Name": "$PluginName"
+        }
+    }
+}

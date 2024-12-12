@@ -1,4 +1,4 @@
-import { RawJson } from "../IRawJson"
+import { RawJson } from "./IRawJson"
 
 export interface ExportAllInput {
     Inputs: {

@@ -69,7 +69,7 @@ if (loggerPath != undefined && loggerPath.length != 0) {
 
 let getCadVersion = async (input: GetCadVersionInput) => {
     let pluginName = "GetCadVersion";
-    let response = await apis.runAsync("localrun", {
+    let response = await apis.runAsync("run", {
         PluginName: pluginName,
         Input: input
     });

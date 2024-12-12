@@ -1,0 +1,4 @@
+{
+    "Name": "import-files",
+    "Entry": "tscl run {.}/index.ts {input} {output} {logger} {progress}"
+}
