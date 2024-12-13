@@ -68,5 +68,10 @@ let main = async () => {
     (output as Json).Save(outputPath);
 };
 
-
-await main();
+try {
+    await main();
+}
+catch (e) {
+    console.log(e);
+    throw e;
+}
