@@ -1,4 +1,4 @@
 {
-    "Name": "import-files",
+    "Name": "workspace-import-files",
     "Entry": "tscl run {.}/index.ts {input} {output} {logger} {progress}"
 }

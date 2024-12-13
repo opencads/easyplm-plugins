@@ -8,7 +8,7 @@ import { Server } from "../.tsc/Cangjie/TypeSharp/System/Server";
 import { Json } from "../.tsc/TidyHPC/LiteJson/Json";
 import { RawJson, WebMessage } from "../IRawJson";
 import { apis } from "../.tsc/Cangjie/TypeSharp/System/apis";
-import { GetCadVersionInput, GetCadVersionOutput } from "../writeRawJson/GetCadVersion";
+import { GetCadVersionInput, GetCadVersionOutput } from "./GetCadVersion";
 
 let parameters = {} as { [key: string]: string };
 let utf8 = new UTF8Encoding(false);

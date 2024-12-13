@@ -8,7 +8,7 @@ import { Server } from "../.tsc/Cangjie/TypeSharp/System/Server";
 import { Json } from "../.tsc/TidyHPC/LiteJson/Json";
 import { RawJson, WebMessage } from "../IRawJson";
 import { apis } from "../.tsc/Cangjie/TypeSharp/System/apis";
-import { GetCadVersionInput, GetCadVersionOutput } from "../writeRawJson/GetCadVersion";
+import { GetCadVersionInput, GetCadVersionOutput } from "../write-rawjson/GetCadVersion";
 import { OpenFileInput, OpenFileOutput } from "./OpenFile";
 
 let parameters = {} as { [key: string]: string };

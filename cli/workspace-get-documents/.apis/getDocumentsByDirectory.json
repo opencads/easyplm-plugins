@@ -1,0 +1,11 @@
+{
+    "Parameters": {
+        "urlPrefix": "http://localhost:19799",
+        "directory": ""
+    },
+    "Method": "GET",
+    "Url": "$urlPrefix+`/api/v1/xplm/getDocumentsByDirectory`",
+    "QueryParameters": {
+        "directory": "$directory"
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "Parameters": {
+        "urlPrefix": "http://localhost:19799",
+        "data": ""
+    },
+    "Method": "POST",
+    "Url": "$urlPrefix+`/api/v1/xplm/import`",
+    "Body": {
+        "data": "$data"
+    }
+}
