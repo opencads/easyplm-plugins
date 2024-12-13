@@ -7,6 +7,23 @@ import { DocumentInterface, IDocumentRecord, IWorkspaceGetDocumentsInput } from 
 import { axios } from "../.tsc/Cangjie/TypeSharp/System/axios";
 
 let utf8 = new UTF8Encoding(false);
+let parameters = {} as { [key: string]: string };
+for (let i = 0; i < args.length; i++) {
+    let arg = args[i];
+    if (arg.startsWith("--")) {
+        let key = arg.substring(2);
+        let value = args[i + 1];
+        parameters[key] = value;
+        i++;
+    }
+    else if (arg.startsWith("-")) {
+        let key = arg.substring(1);
+        let value = args[i + 1];
+        parameters[key] = value;
+        i++;
+    }
+}
+console.log(parameters);
 
 let callPlugin = async (pluginName: string, input: any) => {
     let response = await apis.runAsync("run", {
@@ -47,11 +64,19 @@ let getDocumentsByDirectory = async (directory: string) => {
 };
 
 let main = async () => {
-    let inputPath = args[0];
-    let outputPath = args[1];
-    let loggerPath = args[2];
-    let progresserPath = args[3];
-
+    let inputPath = parameters.i ?? parameters.input;
+    let outputPath = parameters.o ?? parameters.output;
+    let loggerPath = parameters.l ?? parameters.logger;
+    let progresserPath = parameters.p ?? parameters.progress ?? parameters.progresser;
+    if (inputPath == undefined || inputPath == null) {
+        throw "inputPath is required";
+    }
+    if (outputPath == undefined || outputPath == null) {
+        throw "outputPath is required";
+    }
+    if (loggerPath == undefined || loggerPath == null) {
+        throw "loggerPath is required";
+    }
     let input = Json.Load(inputPath) as IWorkspaceGetDocumentsInput;
     let output = {} as any;
     setLoggerPath(loggerPath);

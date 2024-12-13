@@ -12,6 +12,23 @@ import { File } from '../.tsc/System/IO/File';
 import { UTF8Encoding } from '../.tsc/System/Text/UTF8Encoding';
 
 let utf8 = new UTF8Encoding(false);
+let parameters = {} as { [key: string]: string };
+for (let i = 0; i < args.length; i++) {
+    let arg = args[i];
+    if (arg.startsWith("--")) {
+        let key = arg.substring(2);
+        let value = args[i + 1];
+        parameters[key] = value;
+        i++;
+    }
+    else if (arg.startsWith("-")) {
+        let key = arg.substring(1);
+        let value = args[i + 1];
+        parameters[key] = value;
+        i++;
+    }
+}
+console.log(parameters);
 
 let callPlugin = async (pluginName: string, input: any) => {
     let response = await apis.runAsync("run", {
@@ -73,14 +90,19 @@ let importDocuments = async (data: ImportInterface[]) => {
 };
 
 let main = async () => {
-    if (args.length < 4) {
-        console.log("Usage: <inputPath> <outputPath> <loggerPath> <progresserPath>");
-        return;
+    let inputPath = parameters.i ?? parameters.input;
+    let outputPath = parameters.o ?? parameters.output;
+    let loggerPath = parameters.l ?? parameters.logger;
+    let progresserPath = parameters.p ?? parameters.progress ?? parameters.progresser;
+    if (inputPath == undefined || inputPath == null) {
+        throw "inputPath is required";
     }
-    let inputPath = args[0];
-    let outputPath = args[1];
-    let loggerPath = args[2];
-    let progresserPath = args[3];
+    if (outputPath == undefined || outputPath == null) {
+        throw "outputPath is required";
+    }
+    if (loggerPath == undefined || loggerPath == null) {
+        throw "loggerPath is required";
+    }
 
     let input = Json.Load(inputPath) as IImportInput;
     let output = {} as any;
