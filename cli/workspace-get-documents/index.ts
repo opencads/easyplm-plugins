@@ -37,6 +37,7 @@ let getDocumentsByDirectory = async (directory: string) => {
             return msg.data as DocumentInterface[];
         }
         else {
+            console.log(msg);
             throw msg.message;
         }
     }
@@ -68,10 +69,4 @@ let main = async () => {
     (output as Json).Save(outputPath);
 };
 
-try {
-    await main();
-}
-catch (e) {
-    console.log(e);
-    throw e;
-}
+await main();

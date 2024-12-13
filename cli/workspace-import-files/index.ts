@@ -124,10 +124,4 @@ let main = async () => {
     }), utf8);
 };
 
-try {
-    await main();
-}
-catch (e) {
-    console.log(e);
-    throw e;
-}
+await main();
