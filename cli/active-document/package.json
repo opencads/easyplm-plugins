@@ -1,4 +1,4 @@
 {
     "Name": "ActiveDocument",
-    "Entry": "{.}/tscl.exe run {.}/main.ts --input {Input} --output {Output} --logger {Logger}"
+    "Entry": "tscl run {.}/main.ts --input {Input} --output {Output} --logger {Logger}"
 }

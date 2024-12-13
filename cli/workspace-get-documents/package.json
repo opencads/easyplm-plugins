@@ -1,4 +1,4 @@
 {
     "Name": "workspace-get-documents",
-    "Entry": "{.}/tscl.exe run {.}/index.ts --input {Input} --output {Output} --logger {Logger}"
+    "Entry": "tscl run {.}/index.ts --input {Input} --output {Output} --logger {Logger}"
 }
