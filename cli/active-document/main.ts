@@ -8,7 +8,7 @@ import { Server } from "../.tsc/Cangjie/TypeSharp/System/Server";
 import { Json } from "../.tsc/TidyHPC/LiteJson/Json";
 import { RawJson, WebMessage } from "../IRawJson";
 import { apis } from "../.tsc/Cangjie/TypeSharp/System/apis";
-import { GetCadVersionInput, GetCadVersionOutput } from "../write-rawjson/GetCadVersion";
+import { GetCadVersionInput, GetCadVersionOutput } from "../GetCadVersion";
 import { ActiveDocumentInput } from "./ActiveDocument";
 
 let parameters = {} as { [key: string]: string };
@@ -81,7 +81,7 @@ let main = async () => {
         throw "Agent.Name is undefined";
     }
     let pluginName = formatAgentName(input.Agent.Name) + "ActiveDocument";
-    let response = await apis.runAsync("localrun", {
+    let response = await apis.runAsync("run", {
         PluginName: pluginName,
         Input: input
     });

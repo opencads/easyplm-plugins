@@ -8,7 +8,7 @@ import { Server } from "../.tsc/Cangjie/TypeSharp/System/Server";
 import { Json } from "../.tsc/TidyHPC/LiteJson/Json";
 import { RawJson, WebMessage } from "../IRawJson";
 import { apis } from "../.tsc/Cangjie/TypeSharp/System/apis";
-import { GetCadVersionInput, GetCadVersionOutput } from "./GetCadVersion";
+import { GetCadVersionInput, GetCadVersionOutput } from "../GetCadVersion";
 
 let parameters = {} as { [key: string]: string };
 let utf8 = new UTF8Encoding(false);
@@ -94,7 +94,7 @@ let main = async () => {
     let agentNames = Object.keys(mapAgentNameToDocuments);
     for (let agentName of agentNames) {
         let pluginName = formatAgentName(agentName) + "WriteRawJson";
-        let response = await apis.runAsync("localrun", {
+        let response = await apis.runAsync("run", {
             PluginName: pluginName,
             Input: mapAgentNameToDocuments[agentName]
         });

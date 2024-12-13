@@ -8,7 +8,7 @@ import { Server } from "../.tsc/Cangjie/TypeSharp/System/Server";
 import { Json } from "../.tsc/TidyHPC/LiteJson/Json";
 import { RawJson, WebMessage } from "../IRawJson";
 import { apis } from "../.tsc/Cangjie/TypeSharp/System/apis";
-import { GetCadVersionInput, GetCadVersionOutput } from "../write-rawjson/GetCadVersion";
+import { GetCadVersionInput, GetCadVersionOutput } from "../GetCadVersion";
 import { OpenFileInput, OpenFileOutput } from "./OpenFile";
 
 let parameters = {} as { [key: string]: string };
@@ -95,7 +95,7 @@ let main = async () => {
     let mapAgentNameToOutput = {} as { [key: string]: OpenFileOutput };
     for (let agentName of agentNames) {
         let pluginName = formatAgentName(agentName) + "OpenFile";
-        let response = await apis.runAsync("localrun", {
+        let response = await apis.runAsync("run", {
             PluginName: pluginName,
             Input: {
                 Inputs: mapAgentNameToFilePaths[agentName]
