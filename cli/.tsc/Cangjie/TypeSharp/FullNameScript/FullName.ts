@@ -1,6 +1,10 @@
+import { String } from "../../../System/String";
 import { Type } from "../../../System/Type";
 export class FullName {
     public ToString(): string {
+        return {} as any;
+    }
+    public ToFullString(): string {
         return {} as any;
     }
     public GetType(): Type {

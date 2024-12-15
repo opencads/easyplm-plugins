@@ -3,8 +3,10 @@ import { args, setLoggerPath } from "../.tsc/context";
 import { apis } from "../.tsc/Cangjie/TypeSharp/System/apis";
 import { WebMessage } from "../IRawJson";
 import { Json } from "../.tsc/TidyHPC/LiteJson/Json";
-import { DocumentInterface, IDocumentRecord, IWorkspaceGetDocumentsInput } from "./interfaces";
+import { DocumentInterface, IDocumentRecord, IWorkspaceGetDocumentsInput, ScanResult } from "./interfaces";
 import { axios } from "../.tsc/Cangjie/TypeSharp/System/axios";
+import { Path } from "../.tsc/System/IO/Path";
+import { fileUtils } from "../.tsc/Cangjie/TypeSharp/System/fileUtils";
 
 let utf8 = new UTF8Encoding(false);
 let parameters = {} as { [key: string]: string };
@@ -63,6 +65,25 @@ let getDocumentsByDirectory = async (directory: string) => {
     }
 };
 
+let scanDirectory = async (directory: string) => {
+    let response = await apis.runAsync("scanDirectory", {
+        directory
+    });
+    if (response.StatusCode == 200) {
+        let msg = response.Body as WebMessage;
+        if (msg.success) {
+            return msg.data as ScanResult;
+        }
+        else {
+            console.log(msg);
+            throw msg.message;
+        }
+    }
+    else {
+        throw `Failed, status code: ${response.StatusCode}`;
+    }
+};
+
 let main = async () => {
     let inputPath = parameters.i ?? parameters.input;
     let outputPath = parameters.o ?? parameters.output;
@@ -80,17 +101,90 @@ let main = async () => {
     let input = Json.Load(inputPath) as IWorkspaceGetDocumentsInput;
     let output = {} as any;
     setLoggerPath(loggerPath);
-    let localDocuments = await getDocumentsByDirectory(input.path);
-    let mixedDocuments = localDocuments.map(item => {
-        return {
-            name: item.displayName,
-            number: item.documentNumber0,
-            partNumber: item.partNumber0,
-            state: 'new',
-            lifeCycle: ''
+    let scanResult = await scanDirectory(input.path);
+    let result = [] as IDocumentRecord[];
+    for (let untrackedFile of scanResult.untrackedFiles) {
+        let document = {
+            name: Path.GetFileName(untrackedFile),
+            fileName: Path.GetFileName(untrackedFile),
+            number: "",
+            partNumber: "",
+            remoteState: 'unknown',
+            remoteLastModifiedTime: "",
+            lifeCycle: "",
+            local: {
+                workspaceState: "untracked",
+                localFilePath: untrackedFile,
+                localAttributes: [],
+                localChildren: [],
+                localLastModifiedTime: fileUtils.lastWriteTime(untrackedFile).ToString("O")
+            },
+            remoteAttributes: [],
+            remoteChildren: []
         } as IDocumentRecord;
-    });
-    output.Documents = mixedDocuments;
+        result.push(document);
+    }
+    for (let scanDocument of scanResult.documents) {
+        result.push({
+            name: scanDocument.displayName,
+            fileName: scanDocument.originFileName,
+            number: scanDocument.documentNumber0,
+            partNumber: scanDocument.partNumber0,
+            remoteState: 'unknown',
+            remoteLastModifiedTime: '',
+            lifeCycle: '',
+            remoteAttributes: [],
+            remoteChildren: [],
+            local: {
+                workspaceState: 'archived',
+                localFilePath: Path.Combine(input.path, scanDocument.originFileName),
+                localAttributes: [],
+                localChildren: [],
+                localLastModifiedTime: fileUtils.lastWriteTime(Path.Combine(input.path, scanDocument.originFileName)).ToString("O")
+            }
+        });
+    }
+    for (let scanDocument of scanResult.missingDocuments) {
+        result.push({
+            name: scanDocument.displayName,
+            fileName: scanDocument.originFileName,
+            number: scanDocument.documentNumber0,
+            partNumber: scanDocument.partNumber0,
+            remoteState: 'unknown',
+            remoteLastModifiedTime: '',
+            lifeCycle: '',
+            remoteAttributes: [],
+            remoteChildren: [],
+            local: {
+                workspaceState: 'missing',
+                localFilePath: Path.Combine(input.path, scanDocument.originFileName),
+                localAttributes: [],
+                localChildren: [],
+                localLastModifiedTime: fileUtils.lastWriteTime(Path.Combine(input.path, scanDocument.originFileName)).ToString("O")
+            }
+        });
+    }
+    for (let scanDocument of scanResult.modifiedDocuments) {
+        result.push({
+            name: scanDocument.displayName,
+            fileName: scanDocument.originFileName,
+            number: scanDocument.documentNumber0,
+            partNumber: scanDocument.partNumber0,
+            remoteState: 'unknown',
+            remoteLastModifiedTime: '',
+            lifeCycle: '',
+            remoteAttributes: [],
+            remoteChildren: [],
+            local: {
+                workspaceState: 'modified',
+                localFilePath: Path.Combine(input.path, scanDocument.originFileName),
+                localAttributes: [],
+                localChildren: [],
+                localLastModifiedTime: fileUtils.lastWriteTime(Path.Combine(input.path, scanDocument.originFileName)).ToString("O")
+            }
+        });
+    }
+    output.Documents = result;
     (output as Json).Save(outputPath);
 };
 
