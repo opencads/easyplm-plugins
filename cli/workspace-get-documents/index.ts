@@ -137,7 +137,7 @@ let main = async () => {
         result.push(document);
     }
     for (let scanDocument of scanResult.documents) {
-        let rawJsonDocument = await getContent(scanDocument.contentMD5);
+        let rawJsonDocument = await getContent(scanDocument.rawJsonMD5);
         console.log({
             rawJsonDocument
         });
