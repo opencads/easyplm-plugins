@@ -1,7 +1,7 @@
 import { UTF8Encoding } from "../.tsc/System/Text/UTF8Encoding";
 import { args, setLoggerPath } from "../.tsc/context";
 import { apis } from "../.tsc/Cangjie/TypeSharp/System/apis";
-import { WebMessage } from "../IRawJson";
+import { RawJsonDocument, WebMessage } from "../IRawJson";
 import { Json } from "../.tsc/TidyHPC/LiteJson/Json";
 import { DocumentInterface, IDocumentRecord, IWorkspaceGetDocumentsInput, ScanResult } from "./interfaces";
 import { axios } from "../.tsc/Cangjie/TypeSharp/System/axios";
@@ -84,6 +84,18 @@ let scanDirectory = async (directory: string) => {
     }
 };
 
+let getContent = async (contentMD5: string) => {
+    let response = await apis.runAsync("getContent", {
+        contentMD5
+    });
+    if (response.StatusCode == 200) {
+        return response.Body as RawJsonDocument;
+    }
+    else {
+        throw `Failed, status code: ${response.StatusCode}`;
+    }
+};
+
 let main = async () => {
     let inputPath = parameters.i ?? parameters.input;
     let outputPath = parameters.o ?? parameters.output;
@@ -125,6 +137,12 @@ let main = async () => {
         result.push(document);
     }
     for (let scanDocument of scanResult.documents) {
+        let rawJsonDocument = await getContent(scanDocument.contentMD5);
+        console.log({
+            rawJsonDocument
+        });
+        let attributes = rawJsonDocument.Attributes ?? {};
+        let attributeKeys = Object.keys(attributes);
         result.push({
             name: scanDocument.displayName,
             fileName: scanDocument.originFileName,
@@ -138,7 +156,13 @@ let main = async () => {
             local: {
                 workspaceState: 'archived',
                 localFilePath: Path.Combine(input.path, scanDocument.originFileName),
-                localAttributes: [],
+                localAttributes: attributeKeys.map(item => {
+                    return {
+                        key: item,
+                        value: attributes[item],
+                        type: 'string'
+                    }
+                }),
                 localChildren: [],
                 localLastModifiedTime: fileUtils.lastWriteTime(Path.Combine(input.path, scanDocument.originFileName)).ToString("O")
             }

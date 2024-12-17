@@ -1,0 +1,11 @@
+{
+    "Parameters": {
+        "urlPrefix": "http://localhost:19799",
+        "contentMD5": ""
+    },
+    "Method": "GET",
+    "Url": "$urlPrefix+`/api/v1/iostorage/get`",
+    "QueryParameters": {
+        "contentMD5": "$contentMD5"
+    }
+}

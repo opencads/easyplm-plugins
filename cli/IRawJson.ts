@@ -44,7 +44,7 @@ export interface DocumentProperties {
     MengxiPath?: string[];
 }
 
-export interface Document {
+export interface RawJsonDocument {
     FileName: string;
     FilePath: string;
     Attributes?: Attributes;
@@ -79,7 +79,7 @@ export interface Document {
 
 export interface RawJson {
     DocInfo: DocInfo;
-    Documents: Document[];
+    Documents: RawJsonDocument[];
 }
 
 
