@@ -138,11 +138,9 @@ let main = async () => {
     }
     for (let scanDocument of scanResult.documents) {
         let rawJsonDocument = await getContent(scanDocument.rawJsonMD5);
-        console.log({
-            rawJsonDocument
-        });
         let attributes = rawJsonDocument.Attributes ?? {};
         let attributeKeys = Object.keys(attributes);
+        let children = rawJsonDocument.Children ?? [];
         result.push({
             name: scanDocument.displayName,
             fileName: scanDocument.originFileName,
@@ -163,12 +161,23 @@ let main = async () => {
                         type: 'string'
                     }
                 }),
-                localChildren: [],
+                localChildren: children.map(item => {
+                    return {
+                        fileName: item.FileName,
+                        name: item.Name,
+                        number: '',
+                        partNumber: ''
+                    }
+                }),
                 localLastModifiedTime: fileUtils.lastWriteTime(Path.Combine(input.path, scanDocument.originFileName)).ToString("O")
             }
         });
     }
     for (let scanDocument of scanResult.missingDocuments) {
+        let rawJsonDocument = await getContent(scanDocument.rawJsonMD5);
+        let attributes = rawJsonDocument.Attributes ?? {};
+        let attributeKeys = Object.keys(attributes);
+        let children = rawJsonDocument.Children ?? [];
         result.push({
             name: scanDocument.displayName,
             fileName: scanDocument.originFileName,
@@ -182,13 +191,30 @@ let main = async () => {
             local: {
                 workspaceState: 'missing',
                 localFilePath: Path.Combine(input.path, scanDocument.originFileName),
-                localAttributes: [],
-                localChildren: [],
+                localAttributes: attributeKeys.map(item => {
+                    return {
+                        key: item,
+                        value: attributes[item],
+                        type: 'string'
+                    }
+                }),
+                localChildren: children.map(item => {
+                    return {
+                        fileName: item.FileName,
+                        name: item.Name,
+                        number: '',
+                        partNumber: ''
+                    }
+                }),
                 localLastModifiedTime: fileUtils.lastWriteTime(Path.Combine(input.path, scanDocument.originFileName)).ToString("O")
             }
         });
     }
     for (let scanDocument of scanResult.modifiedDocuments) {
+        let rawJsonDocument = await getContent(scanDocument.rawJsonMD5);
+        let attributes = rawJsonDocument.Attributes ?? {};
+        let attributeKeys = Object.keys(attributes);
+        let children = rawJsonDocument.Children ?? [];
         result.push({
             name: scanDocument.displayName,
             fileName: scanDocument.originFileName,
@@ -202,8 +228,21 @@ let main = async () => {
             local: {
                 workspaceState: 'modified',
                 localFilePath: Path.Combine(input.path, scanDocument.originFileName),
-                localAttributes: [],
-                localChildren: [],
+                localAttributes: attributeKeys.map(item => {
+                    return {
+                        key: item,
+                        value: attributes[item],
+                        type: 'string'
+                    }
+                }),
+                localChildren: children.map(item => {
+                    return {
+                        fileName: item.FileName,
+                        name: item.Name,
+                        number: '',
+                        partNumber: ''
+                    }
+                }),
                 localLastModifiedTime: fileUtils.lastWriteTime(Path.Combine(input.path, scanDocument.originFileName)).ToString("O")
             }
         });
