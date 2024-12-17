@@ -63,10 +63,13 @@ export interface DocumentInterface {
     displayName: string,
     createTime: DateTime,
 }
+export interface DocumentWithRawJsonInterface extends DocumentInterface {
+    rawJson: any
+}
 
 export interface ScanResult {
     untrackedFiles: string[],
-    documents: DocumentInterface[],
-    modifiedDocuments: DocumentInterface[],
-    missingDocuments: DocumentInterface[],
+    documents: DocumentWithRawJsonInterface[],
+    modifiedDocuments: DocumentWithRawJsonInterface[],
+    missingDocuments: DocumentWithRawJsonInterface[],
 }

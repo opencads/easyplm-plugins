@@ -137,7 +137,7 @@ let main = async () => {
         result.push(document);
     }
     for (let scanDocument of scanResult.documents) {
-        let rawJsonDocument = await getContent(scanDocument.rawJsonMD5);
+        let rawJsonDocument = scanDocument.rawJson;
         let attributes = rawJsonDocument.Attributes ?? {};
         let attributeKeys = Object.keys(attributes);
         let children = rawJsonDocument.Children ?? [];
@@ -174,7 +174,7 @@ let main = async () => {
         });
     }
     for (let scanDocument of scanResult.missingDocuments) {
-        let rawJsonDocument = await getContent(scanDocument.rawJsonMD5);
+        let rawJsonDocument = scanDocument.rawJson;
         let attributes = rawJsonDocument.Attributes ?? {};
         let attributeKeys = Object.keys(attributes);
         let children = rawJsonDocument.Children ?? [];
@@ -211,7 +211,7 @@ let main = async () => {
         });
     }
     for (let scanDocument of scanResult.modifiedDocuments) {
-        let rawJsonDocument = await getContent(scanDocument.rawJsonMD5);
+        let rawJsonDocument = scanDocument.rawJson;
         let attributes = rawJsonDocument.Attributes ?? {};
         let attributeKeys = Object.keys(attributes);
         let children = rawJsonDocument.Children ?? [];
