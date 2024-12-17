@@ -164,7 +164,7 @@ let main = async () => {
                 localChildren: children.map(item => {
                     return {
                         fileName: item.FileName,
-                        name: item.Name,
+                        name: item.Name ?? item.FileName,
                         number: '',
                         partNumber: ''
                     }
@@ -201,7 +201,7 @@ let main = async () => {
                 localChildren: children.map(item => {
                     return {
                         fileName: item.FileName,
-                        name: item.Name,
+                        name: item.Name ?? item.FileName,
                         number: '',
                         partNumber: ''
                     }
@@ -238,7 +238,7 @@ let main = async () => {
                 localChildren: children.map(item => {
                     return {
                         fileName: item.FileName,
-                        name: item.Name,
+                        name: item.Name ?? item.FileName,
                         number: '',
                         partNumber: ''
                     }
