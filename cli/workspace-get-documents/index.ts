@@ -266,6 +266,7 @@ let main = async () => {
         }
     })();
     await taskUtils.whenAll([tasks1, tasks2]);
+    console.log(`remote documents : ${remoteDocuments}`);
     let resultDocuments = [] as IDocumentRecord[];
     output.Documents = resultDocuments;
     for (let document of localDocuments) {
