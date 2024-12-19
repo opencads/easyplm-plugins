@@ -268,6 +268,7 @@ let main = async () => {
     await taskUtils.whenAll([tasks1, tasks2]);
     let resultDocuments = [] as IDocumentRecord[];
     output.Documents = resultDocuments;
+    let toQueryDocuments = [] as IDocumentRecord[];
     for (let document of localDocuments) {
         let remoteDocument = remoteDocuments.find(item => item.fileName == document.fileName);
         if (remoteDocument) {
@@ -283,6 +284,10 @@ let main = async () => {
                 document.partNumber = remoteDocument.partNumber;
             }
             remoteDocuments.splice(remoteDocuments.indexOf(remoteDocument), 1);
+        }
+        else {
+            toQueryDocuments.push(document);
+            document.remoteState = 'new';
         }
         resultDocuments.push(document);
     }
