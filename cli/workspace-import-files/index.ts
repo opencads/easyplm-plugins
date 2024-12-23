@@ -10,6 +10,7 @@ import { axios } from '../.tsc/Cangjie/TypeSharp/System/axios';
 import { Path } from '../.tsc/System/IO/Path';
 import { File } from '../.tsc/System/IO/File';
 import { UTF8Encoding } from '../.tsc/System/Text/UTF8Encoding';
+import { fileUtils } from '../.tsc/Cangjie/TypeSharp/System/fileUtils';
 
 let utf8 = new UTF8Encoding(false);
 let parameters = {} as { [key: string]: string };
@@ -71,6 +72,27 @@ let getDefaultDirectory = async () => {
     }
 };
 
+let getRawJsonByContentMD5s = async (contentMD5s: string[]) => {
+    let response = await apis.runAsync("getRawJsonByContentMD5s", {
+        contentMD5s
+    });
+    if (response.StatusCode == 200) {
+        let msg = response.Body as WebMessage;
+        if (msg.success) {
+            return msg.data as {
+                contentMD5: string;
+                rawJson: string | null;
+            }[];
+        }
+        else {
+            throw msg.message;
+        }
+    }
+    else {
+        throw `Failed, status code: ${response.StatusCode}`;
+    }
+};
+
 let importDocuments = async (data: ImportInterface[]) => {
     let response = await apis.runAsync("import", {
         data: data
@@ -105,15 +127,28 @@ let main = async () => {
     }
 
     let input = Json.Load(inputPath) as IImportInput;
-    let output = {} as any;
     setLoggerPath(loggerPath);
     // 先将入参的文件都获取RawJson
     let exportAllInput = {
         Inputs: []
     } as ExportAllInput;
-    for (let item of input.Items) {
+    let contentMD5s = input.Items.map(item => {
+        return {
+            contentMD5: fileUtils.md5(item.FilePath),
+            filePath: item.FilePath
+        };
+    });
+    let cacheRawJsons = await getRawJsonByContentMD5s(contentMD5s.map(item => item.contentMD5));
+    let unCachedFilePaths = [] as string[];
+    for (let item of contentMD5s) {
+        let cachedRawJson = cacheRawJsons.find(x => x.contentMD5 == item.contentMD5);
+        if (cachedRawJson == null) {
+            unCachedFilePaths.push(item.filePath);
+        }
+    }
+    for (let item of unCachedFilePaths) {
         exportAllInput.Inputs.push({
-            FilePath: item.FilePath,
+            FilePath: item,
             Properties: {
 
             }
@@ -123,6 +158,12 @@ let main = async () => {
     // 开始构建导入数据
     let importInput = [] as ImportInterface[];
     let defaultDirectory = await getDefaultDirectory();
+    let documents = [...exportAllOutput.Documents];
+    for (let item of cacheRawJsons) {
+        if (item.rawJson) {
+            documents.push(JSON.parse(item.rawJson));
+        }
+    }
     for (let document of exportAllOutput.Documents) {
         let importItem = {} as ImportInterface;
         importItem.filePath = document.FilePath;

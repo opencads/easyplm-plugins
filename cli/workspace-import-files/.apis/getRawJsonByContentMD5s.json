@@ -1,0 +1,11 @@
+{
+    "Parameters": {
+        "urlPrefix": "http://localhost:19799",
+        "contentMD5s": []
+    },
+    "Method": "POST",
+    "Url": "$urlPrefix+`/api/v1/xplm/getRawJsonByContentMD5s`",
+    "Body": {
+        "contentMD5s": "$contentMD5s"
+    }
+}
