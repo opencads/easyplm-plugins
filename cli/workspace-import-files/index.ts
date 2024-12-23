@@ -142,6 +142,7 @@ let main = async () => {
     let unCachedFilePaths = [] as string[];
     for (let item of contentMD5s) {
         let cachedRawJson = cacheRawJsons.find(x => x.contentMD5 == item.contentMD5);
+        console.log(`cachedRawJson is null = ${cachedRawJson == null}`)
         if (cachedRawJson == null) {
             unCachedFilePaths.push(item.filePath);
         }
@@ -154,7 +155,15 @@ let main = async () => {
             }
         });
     }
-    let exportAllOutput = await exportAll(exportAllInput);
+    let exportAllOutput = {
+        DocInfo: {
+            SchemaVersion: '3.2.0'
+        },
+        Documents: []
+    } as ExportAllOutput;
+    if (exportAllInput.Inputs.length != 0) {
+        exportAllOutput = await exportAll(exportAllInput);
+    }
     // 开始构建导入数据
     let importInput = [] as ImportInterface[];
     let defaultDirectory = await getDefaultDirectory();
