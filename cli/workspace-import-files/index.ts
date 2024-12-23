@@ -142,8 +142,10 @@ let main = async () => {
     let unCachedFilePaths = [] as string[];
     for (let item of contentMD5s) {
         let cachedRawJson = cacheRawJsons.find(x => x.contentMD5 == item.contentMD5);
-        console.log(`cachedRawJson is null = ${cachedRawJson == null}`)
-        if (cachedRawJson == null) {
+        if (cachedRawJson == undefined) {
+            throw "Failed to get raw json";
+        }
+        if (cachedRawJson.rawJson == null) {
             unCachedFilePaths.push(item.filePath);
         }
     }
