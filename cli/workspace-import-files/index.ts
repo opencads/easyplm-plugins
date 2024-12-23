@@ -164,7 +164,7 @@ let main = async () => {
             documents.push(JSON.parse(item.rawJson));
         }
     }
-    for (let document of exportAllOutput.Documents) {
+    for (let document of documents) {
         let importItem = {} as ImportInterface;
         importItem.filePath = document.FilePath;
         importItem.directory = defaultDirectory;
