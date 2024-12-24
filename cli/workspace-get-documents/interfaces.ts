@@ -7,42 +7,7 @@ export interface IWorkspaceGetDocumentsInput {
     remoteWorkspaceId: string
 }
 
-export interface IDocumentRecord {
-    name: string;
-    fileName: string;
-    number: string;
-    partNumber: string;
-    remoteState: 'new' | 'checkedIn' | 'checkedOut'|'unknown';
-    remoteLastModifiedTime: string;
-    lifeCycle: string;
-    local: {
-        workspaceState: 'untracked' | 'modified' | 'archived' | 'missing';
-        localFilePath: string;
-        localAttributes: {
-            key: string,
-            value: string,
-            type: string
-        }[];
-        localChildren: {
-            fileName: string,
-            name: string,
-            number: string,
-            partNumber: string
-        }[];
-        localLastModifiedTime: string;
-    };
-    remoteAttributes: {
-        key: string,
-        value: string,
-        type: string
-    }[];
-    remoteChildren: {
-        fileName: string,
-        name: string,
-        number: string,
-        partNumber: string
-    }[];
-}
+
 
 export interface DocumentInterface {
     id: Guid,
@@ -72,4 +37,10 @@ export interface ScanResult {
     documents: DocumentWithRawJsonInterface[],
     modifiedDocuments: DocumentWithRawJsonInterface[],
     missingDocuments: DocumentWithRawJsonInterface[],
+}
+
+export interface QueryDocumentsByIndexInput {
+    FileNames: string[],
+    DocumentNumbers: string[],
+    PartNumbers: string[]
 }

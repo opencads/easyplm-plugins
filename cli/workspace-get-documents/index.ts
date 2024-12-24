@@ -3,11 +3,15 @@ import { args, setLoggerPath } from "../.tsc/context";
 import { apis } from "../.tsc/Cangjie/TypeSharp/System/apis";
 import { RawJsonDocument, WebMessage } from "../IRawJson";
 import { Json } from "../.tsc/TidyHPC/LiteJson/Json";
-import { DocumentInterface, IDocumentRecord, IWorkspaceGetDocumentsInput, ScanResult } from "./interfaces";
+import { DocumentInterface, IWorkspaceGetDocumentsInput, QueryDocumentsByIndexInput, ScanResult } from "./interfaces";
 import { axios } from "../.tsc/Cangjie/TypeSharp/System/axios";
 import { Path } from "../.tsc/System/IO/Path";
 import { fileUtils } from "../.tsc/Cangjie/TypeSharp/System/fileUtils";
 import { taskUtils } from "../.tsc/Cangjie/TypeSharp/System/taskUtils";
+import { Regex } from "../.tsc/System/Text/RegularExpressions/Regex";
+import { IDocumentRecord, IProgresser } from "../interfaces";
+import { Guid } from "../.tsc/System/Guid";
+import { DateTime } from "../.tsc/System/DateTime";
 let utf8 = new UTF8Encoding(false);
 let parameters = {} as { [key: string]: string };
 for (let i = 0; i < args.length; i++) {
@@ -26,6 +30,31 @@ for (let i = 0; i < args.length; i++) {
     }
 }
 console.log(parameters);
+
+let Progresser = (progressPath: string, start: number, length: number, scope: string) => {
+    return {} as IProgresser;
+};
+Progresser = (progressPath: string, start: number, length: number, scope: string) => {
+    let current = start;
+    let recordByPercent = (percent: number, message: string) => {
+        current = start + length * percent;
+        let id = Guid.NewGuid().ToString();
+        fileUtils.writeLineWithShare(progressPath, `${id} ${JSON.stringify({ DateTime: DateTime.Now.ToString("O"), Scope: scope, Progress: current, Message: message }, null, 0)}`);
+    };
+    let recordByIncrease = (increase: number, message: string) => {
+        current += increase * length;
+        let id = Guid.NewGuid().ToString();
+        fileUtils.writeLineWithShare(progressPath, `${id} ${JSON.stringify({ DateTime: DateTime.Now.ToString("O"), Scope: scope, Progress: current, Message: message }, null, 0)}`);
+    };
+    let getSubProgresserByPercent = (subScope: string, percent: number) => {
+        return Progresser(progressPath, current, length * percent, subScope);
+    };
+    return {
+        recordByPercent,
+        recordByIncrease,
+        getSubProgresserByPercent
+    };
+};
 
 let callPlugin = async (pluginName: string, input: any) => {
     let response = await apis.runAsync("run", {
@@ -96,11 +125,29 @@ let getContent = async (contentMD5: string) => {
     }
 };
 
-let getRemoteDocuments = async () => {
-    let output = await callPlugin("get-remote-documents", {
+let getWorkspaceRemoteDocuments = async () => {
+    let output = await callPlugin("workspace-get-remote-documents", {
 
     });
     return output.Documents as IDocumentRecord[];
+};
+
+let queryDocumentsByIndex = async (input: QueryDocumentsByIndexInput) => {
+    let output = await callPlugin("query-documents-by-index", input);
+    return output.Documents as IDocumentRecord[];
+};
+let digitFileExtensionReg = new Regex('\\.\\d+$');
+let getFormatFileName = (filePath: string) => {
+    return digitFileExtensionReg.Replace(Path.GetFileName(filePath), "");
+};
+
+let updateDocumentByRemoteDocument = (document: IDocumentRecord, remoteDocument: IDocumentRecord) => {
+    if (document.number == '') {
+        document.number = remoteDocument.number;
+    }
+    if (document.partNumber == '') {
+        document.partNumber = remoteDocument.partNumber;
+    }
 };
 
 let main = async () => {
@@ -108,6 +155,7 @@ let main = async () => {
     let outputPath = parameters.o ?? parameters.output;
     let loggerPath = parameters.l ?? parameters.logger;
     let progresserPath = parameters.p ?? parameters.progress ?? parameters.progresser;
+    let progresser = Progresser(progresserPath, 0, 1, "GetWorkSpaceDocuments");
     if (inputPath == undefined || inputPath == null) {
         throw "inputPath is required";
     }
@@ -122,27 +170,56 @@ let main = async () => {
     setLoggerPath(loggerPath);
     let localDocuments = [] as IDocumentRecord[];
     let remoteDocuments = [] as IDocumentRecord[];
+    progresser.recordByPercent(0.2, "正在扫描本地图档");
     let tasks1 = (async () => {
         let scanResult = await scanDirectory(input.path);
+        progresser.recordByIncrease(0.2, "已扫描完本地图档，正在比对线上图档");
+        let queryInput = {} as QueryDocumentsByIndexInput;
+        for (let item of scanResult.untrackedFiles) {
+            queryInput.FileNames.push(getFormatFileName(item));
+        }
+        for (let item of [...scanResult.missingDocuments, ...scanResult.modifiedDocuments, ...scanResult.documents]) {
+            if (item.documentNumber0 != "") {
+                queryInput.DocumentNumbers.push(item.documentNumber0);
+            }
+            else if (item.partNumber0 != "") {
+                queryInput.PartNumbers.push(item.partNumber0);
+            }
+            else if (item.formatFileName != "") {
+                queryInput.FileNames.push(item.formatFileName);
+            }
+        }
+        let queryDocuments = await queryDocumentsByIndex(queryInput);
+        progresser.recordByIncrease(0.2, "已比对完线上图档");
         for (let untrackedFile of scanResult.untrackedFiles) {
             let document = {
                 name: Path.GetFileName(untrackedFile),
                 fileName: Path.GetFileName(untrackedFile),
                 number: "",
                 partNumber: "",
-                remoteState: 'unknown',
-                remoteLastModifiedTime: "",
-                lifeCycle: "",
+                remote: {
+                    success: false,
+                    remoteState: 'unknown',
+                    remoteLastModifiedTime: "",
+                    lifeCycle: "",
+                    remoteAttributes: [],
+                    remoteChildren: []
+                },
                 local: {
+                    success: true,
                     workspaceState: "untracked",
                     localFilePath: untrackedFile,
                     localAttributes: [],
                     localChildren: [],
                     localLastModifiedTime: fileUtils.lastWriteTime(untrackedFile).ToString("O")
                 },
-                remoteAttributes: [],
-                remoteChildren: []
+
             } as IDocumentRecord;
+            let remoteDocument = queryDocuments.find(x => x.fileName == getFormatFileName(untrackedFile));
+            if (remoteDocument) {
+                document.remote = remoteDocument.remote;
+                updateDocumentByRemoteDocument(document, remoteDocument);
+            }
             localDocuments.push(document);
         }
         for (let scanDocument of scanResult.documents) {
@@ -150,17 +227,39 @@ let main = async () => {
             let attributes = rawJsonDocument.Attributes ?? {};
             let attributeKeys = Object.keys(attributes);
             let children = rawJsonDocument.Children ?? [];
-            localDocuments.push({
+            let remoteDocument = queryDocuments.find(x => {
+                if (scanDocument.formatFileName != "") {
+                    if (x.fileName == scanDocument.formatFileName) {
+                        return true;
+                    }
+                }
+                if (scanDocument.documentNumber0 != "") {
+                    if (x.number == scanDocument.documentNumber0) {
+                        return true;
+                    }
+                }
+                if (scanDocument.partNumber0 != "") {
+                    if (x.partNumber == scanDocument.partNumber0) {
+                        return true;
+                    }
+                }
+                return false;
+            });
+            let localDocument = {
                 name: scanDocument.displayName,
                 fileName: scanDocument.originFileName,
                 number: scanDocument.documentNumber0,
                 partNumber: scanDocument.partNumber0,
-                remoteState: 'unknown',
-                remoteLastModifiedTime: '',
-                lifeCycle: '',
-                remoteAttributes: [],
-                remoteChildren: [],
+                remote: {
+                    success: false,
+                    remoteState: 'unknown',
+                    remoteLastModifiedTime: '',
+                    lifeCycle: '',
+                    remoteAttributes: [],
+                    remoteChildren: [],
+                },
                 local: {
+                    success: true,
                     workspaceState: 'archived',
                     localFilePath: Path.Combine(input.path, scanDocument.originFileName),
                     localAttributes: attributeKeys.map(item => {
@@ -180,24 +279,51 @@ let main = async () => {
                     }),
                     localLastModifiedTime: fileUtils.lastWriteTime(Path.Combine(input.path, scanDocument.originFileName)).ToString("O")
                 }
-            });
+            } as IDocumentRecord;
+            if (remoteDocument) {
+                localDocument.remote = remoteDocument.remote;
+                updateDocumentByRemoteDocument(localDocument, remoteDocument);
+            }
+            localDocuments.push(localDocument);
         }
         for (let scanDocument of scanResult.missingDocuments) {
             let rawJsonDocument = scanDocument.rawJson;
             let attributes = rawJsonDocument.Attributes ?? {};
             let attributeKeys = Object.keys(attributes);
             let children = rawJsonDocument.Children ?? [];
-            localDocuments.push({
+            let remoteDocument = queryDocuments.find(x => {
+                if (scanDocument.formatFileName != "") {
+                    if (x.fileName == scanDocument.formatFileName) {
+                        return true;
+                    }
+                }
+                if (scanDocument.documentNumber0 != "") {
+                    if (x.number == scanDocument.documentNumber0) {
+                        return true;
+                    }
+                }
+                if (scanDocument.partNumber0 != "") {
+                    if (x.partNumber == scanDocument.partNumber0) {
+                        return true;
+                    }
+                }
+                return false;
+            });
+            let localDocument = {
                 name: scanDocument.displayName,
                 fileName: scanDocument.originFileName,
                 number: scanDocument.documentNumber0,
                 partNumber: scanDocument.partNumber0,
-                remoteState: 'unknown',
-                remoteLastModifiedTime: '',
-                lifeCycle: '',
-                remoteAttributes: [],
-                remoteChildren: [],
+                remote: {
+                    success: false,
+                    remoteState: 'unknown',
+                    remoteLastModifiedTime: '',
+                    lifeCycle: '',
+                    remoteAttributes: [],
+                    remoteChildren: [],
+                },
                 local: {
+                    success: true,
                     workspaceState: 'missing',
                     localFilePath: Path.Combine(input.path, scanDocument.originFileName),
                     localAttributes: attributeKeys.map(item => {
@@ -217,24 +343,51 @@ let main = async () => {
                     }),
                     localLastModifiedTime: fileUtils.lastWriteTime(Path.Combine(input.path, scanDocument.originFileName)).ToString("O")
                 }
-            });
+            } as IDocumentRecord;
+            if (remoteDocument) {
+                localDocument.remote = remoteDocument.remote;
+                updateDocumentByRemoteDocument(localDocument, remoteDocument);
+            }
+            localDocuments.push(localDocument);
         }
         for (let scanDocument of scanResult.modifiedDocuments) {
             let rawJsonDocument = scanDocument.rawJson;
             let attributes = rawJsonDocument.Attributes ?? {};
             let attributeKeys = Object.keys(attributes);
             let children = rawJsonDocument.Children ?? [];
-            localDocuments.push({
+            let remoteDocument = queryDocuments.find(x => {
+                if (scanDocument.formatFileName != "") {
+                    if (x.fileName == scanDocument.formatFileName) {
+                        return true;
+                    }
+                }
+                if (scanDocument.documentNumber0 != "") {
+                    if (x.number == scanDocument.documentNumber0) {
+                        return true;
+                    }
+                }
+                if (scanDocument.partNumber0 != "") {
+                    if (x.partNumber == scanDocument.partNumber0) {
+                        return true;
+                    }
+                }
+                return false;
+            });
+            let localDocument = {
                 name: scanDocument.displayName,
                 fileName: scanDocument.originFileName,
                 number: scanDocument.documentNumber0,
                 partNumber: scanDocument.partNumber0,
-                remoteState: 'unknown',
-                remoteLastModifiedTime: '',
-                lifeCycle: '',
-                remoteAttributes: [],
-                remoteChildren: [],
+                remote: {
+                    success: false,
+                    remoteState: 'unknown',
+                    remoteLastModifiedTime: '',
+                    lifeCycle: '',
+                    remoteAttributes: [],
+                    remoteChildren: [],
+                },
                 local: {
+                    success: true,
                     workspaceState: 'modified',
                     localFilePath: Path.Combine(input.path, scanDocument.originFileName),
                     localAttributes: attributeKeys.map(item => {
@@ -254,46 +407,51 @@ let main = async () => {
                     }),
                     localLastModifiedTime: fileUtils.lastWriteTime(Path.Combine(input.path, scanDocument.originFileName)).ToString("O")
                 }
-            });
+            } as IDocumentRecord;
+            if (remoteDocument) {
+                localDocument.remote = remoteDocument.remote;
+                updateDocumentByRemoteDocument(localDocument, remoteDocument);
+            }
+            localDocuments.push(localDocument);
         }
     })();
     let tasks2 = (async () => {
         try {
-            remoteDocuments = await getRemoteDocuments();
+            remoteDocuments = await getWorkspaceRemoteDocuments();
         }
         catch {
 
         }
+        progresser.recordByIncrease(0.2, "已获取系统工作区文档列表");
     })();
     await taskUtils.whenAll([tasks1, tasks2]);
+    progresser.recordByPercent(0.9, "获取文档列表完成");
     let resultDocuments = [] as IDocumentRecord[];
     output.Documents = resultDocuments;
     let toQueryDocuments = [] as IDocumentRecord[];
     for (let document of localDocuments) {
         let remoteDocument = remoteDocuments.find(item => item.fileName == document.fileName);
         if (remoteDocument) {
-            document.remoteState = remoteDocument.remoteState;
-            document.remoteLastModifiedTime = remoteDocument.remoteLastModifiedTime;
-            document.lifeCycle = remoteDocument.lifeCycle;
-            document.remoteAttributes = remoteDocument.remoteAttributes;
-            document.remoteChildren = remoteDocument.remoteChildren;
-            if (document.number == '') {
-                document.number = remoteDocument.number;
+            if (document.remote.success) {
+
             }
-            if (document.partNumber == '') {
-                document.partNumber = remoteDocument.partNumber;
+            else {
+                document.remote = remoteDocument.remote;
+                updateDocumentByRemoteDocument(document, remoteDocument);
             }
+
             remoteDocuments.splice(remoteDocuments.indexOf(remoteDocument), 1);
         }
         else {
             toQueryDocuments.push(document);
-            document.remoteState = 'new';
+            document.remote.remoteState = 'new';
         }
         resultDocuments.push(document);
     }
     remoteDocuments.forEach(item => {
         resultDocuments.push(item);
     });
+    progresser.recordByPercent(1, "完成");
     (output as Json).Save(outputPath);
 };
 
