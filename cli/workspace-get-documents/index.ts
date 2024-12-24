@@ -174,7 +174,11 @@ let main = async () => {
     let tasks1 = (async () => {
         let scanResult = await scanDirectory(input.path);
         progresser.recordByIncrease(0.2, "已扫描完本地图档，正在比对线上图档");
-        let queryInput = {} as QueryDocumentsByIndexInput;
+        let queryInput = {
+            FileNames: [],
+            DocumentNumbers: [],
+            PartNumbers: []
+        } as QueryDocumentsByIndexInput;
         for (let item of scanResult.untrackedFiles) {
             queryInput.FileNames.push(getFormatFileName(item));
         }
