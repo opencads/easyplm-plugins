@@ -1,0 +1,4 @@
+{
+    "Name": "set-subscribers",
+    "Entry": "tscl run {.}/main.ts --input {Input} --output {Output} --logger {Logger}"
+}
