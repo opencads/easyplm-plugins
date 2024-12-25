@@ -1,5 +1,5 @@
 {
-    "Name": "get-default-directory",
+    "Name": "get-subscribers",
     "Entry": "http://localhost:19799/api/v1/xplm/getPluginSubscribers",
     "Type": "HttpGet"
 }
