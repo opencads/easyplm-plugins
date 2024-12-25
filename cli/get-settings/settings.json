@@ -1,0 +1,96 @@
+[
+    "# Settings",
+    {
+        "type": "tab",
+        "text": "Workspace",
+        "children": [
+            "## Master Workspace",
+            {
+                "type": "card",
+                "children": [
+                    {
+                        "type": "line-input",
+                        "text": "Default Workspace:",
+                        "valueKey": "defaultDirectory",
+                        "getter": "$plugin:get-default-directory",
+                        "setter": "$plugin:set-default-directory"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "type": "tab",
+        "text": "Plugins",
+        "children": [
+            "## Subscribers",
+            {
+                "type": "card",
+                "children": [
+                    {
+                        "type": "table",
+                        "text": "Subscribers:",
+                        "valueKey": "subscribers",
+                        "tableOptions": {
+                            "keys": [
+                                "name",
+                                "url",
+                                {
+                                    "key": "type",
+                                    "type": "select",
+                                    "selectOptions": [
+                                        "git-repository",
+                                        "git-release"
+                                    ],
+                                    "selectWidth": "12em",
+                                    "columnWidth": "14em"
+                                }
+                            ]
+                        },
+                        "getter": "$plugin:get-subscribers",
+                        "setter": "$plugin:set-subscribers"
+                    }
+                ]
+            },
+            "## Local Subscribers",
+            {
+                "type": "card",
+                "children": [
+                    {
+                        "type": "table",
+                        "valueKey": "localSubscribers",
+                        "tableOptions": {
+                            "keys": [
+                                "name",
+                                "url"
+                            ],
+                            "add": false
+                        },
+                        "getter": "$plugin:get-local-subscribers",
+                        "setter": "$plugin:set-local-subscribers"
+                    }
+                ]
+            },
+            "## Plugins",
+            {
+                "type": "card",
+                "children": [
+                    {
+                        "type": "table",
+                        "valueKey": "plugins",
+                        "tableOptions": {
+                            "defaultType": "text",
+                            "keys": [
+                                "Name",
+                                "Entry"
+                            ],
+                            "add": false,
+                            "remove": false
+                        },
+                        "getter": "$plugin:get-plugins"
+                    }
+                ]
+            }
+        ]
+    }
+]

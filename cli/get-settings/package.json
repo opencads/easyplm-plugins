@@ -1,0 +1,6 @@
+{
+    "Name": "get-settings",
+    "Entry": "{.}/settings.json",
+    "Type": "File",
+    "Priority": -1
+}
