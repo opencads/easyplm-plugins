@@ -1,5 +1,5 @@
 {
     "Name": "get-login-info",
-    "Entry": "{userprofile}\\.xplm\\Cache\\loginCache.json",
+    "Entry": "{userprofile}\\.xplm\\cache\\loginCache.json",
     "Type": "FileRead"
 }
