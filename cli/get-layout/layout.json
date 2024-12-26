@@ -1,0 +1,10 @@
+{
+    "tabs": [
+        {
+            "key": "documents",
+            "icon": "documents",
+            "title": "Documents",
+            "url": "native://documents"
+        }
+    ]
+}
