@@ -1,4 +1,5 @@
 {
     "Name": "workspace-get-documents",
-    "Entry": "tscl run {.}/index.ts --input {Input} --output {Output} --logger {Logger} --progress {Progress}"
+    "Entry": "{.}/index.ts",
+    "Type": "TypeSharp-Progress"
 }

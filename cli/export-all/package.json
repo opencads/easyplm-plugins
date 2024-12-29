@@ -1,4 +1,5 @@
 {
     "Name": "ExportAll",
-    "Entry": "tscl run {.}/main.ts --input {Input} --output {Output} --logger {Logger}"
+    "Entry": "{.}/main.ts",
+    "Type": "TypeSharp"
 }

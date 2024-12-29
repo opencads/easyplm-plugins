@@ -1,4 +1,5 @@
 {
     "Name": "workspace-import-files",
-    "Entry": "tscl run {.}/index.ts --input {Input} --output {Output} --logger {Logger}"
+    "Entry": "{.}/index.ts",
+    "Type": "TypeSharp"
 }
