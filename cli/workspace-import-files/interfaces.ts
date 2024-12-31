@@ -1,3 +1,5 @@
+import { RawJsonDocument } from "../IRawJson";
+
 export type Guid = string;
 export type DateTime = string;
 
@@ -31,5 +33,5 @@ export interface DocumentInterface {
 }
 
 export interface IImportOutput extends DocumentInterface {
-    rawJson:any
+    rawJson:RawJsonDocument
 }
