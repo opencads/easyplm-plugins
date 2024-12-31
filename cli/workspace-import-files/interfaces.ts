@@ -29,3 +29,7 @@ export interface DocumentInterface {
     fileLastWriteTime: DateTime,
     fileLength: number
 }
+
+export interface IImportOutput extends DocumentInterface {
+    rawJson:any
+}

@@ -1,6 +1,6 @@
 import { args, setLoggerPath } from '../.tsc/context';
 import { Json } from '../.tsc/TidyHPC/LiteJson/Json';
-import { DocumentInterface, IImportInput } from './interfaces';
+import { DocumentInterface, IImportInput, IImportOutput } from './interfaces';
 import { apis } from '../.tsc/Cangjie/TypeSharp/System/apis';
 import { WebMessage } from '../IRawJson';
 import { GetCadVersionOutput } from '../GetCadVersion';
@@ -193,9 +193,14 @@ let main = async () => {
     }
 
     let importResult = await importDocuments(importInput);
-    File.WriteAllText(outputPath, JSON.stringify({
-        importResult
-    }), utf8);
+    let importOutput = [] as IImportOutput[];
+    for (let item of importResult) {
+        importOutput.push({
+            ...item,
+            rawJson: (importInput.find(item => item.displayName == item.displayName) ?? {})
+        });
+    }
+    File.WriteAllText(outputPath, JSON.stringify(importOutput), utf8);
 };
 
 await main();
