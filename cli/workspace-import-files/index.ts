@@ -195,9 +195,13 @@ let main = async () => {
     let importResult = await importDocuments(importInput);
     let importOutput = [] as IImportOutput[];
     for (let item of importResult) {
+        let importInputItem = importInput.find(x => x.displayName == item.displayName);
+        if (importInputItem == undefined) {
+            throw "Failed to find import input item";
+        }
         importOutput.push({
             ...item,
-            rawJson: (importInput.find(item => item.displayName == item.displayName)?.rawJson ?? {})
+            rawJson: importInputItem.rawJson
         });
     }
     File.WriteAllText(outputPath, JSON.stringify(importOutput), utf8);
