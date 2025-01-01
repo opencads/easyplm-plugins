@@ -197,7 +197,7 @@ let main = async () => {
     for (let item of importResult) {
         importOutput.push({
             ...item,
-            rawJson: (importInput.find(item => item.displayName == item.displayName) ?? {})
+            rawJson: (importInput.find(item => item.displayName == item.displayName)?.rawJson ?? {})
         });
     }
     File.WriteAllText(outputPath, JSON.stringify(importOutput), utf8);
