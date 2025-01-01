@@ -197,6 +197,7 @@ let main = async () => {
         progresser.recordByIncrease(0.2, "已比对完线上图档");
         for (let untrackedFile of scanResult.untrackedFiles) {
             let document = {
+                key: Path.GetFileName(untrackedFile),
                 name: Path.GetFileName(untrackedFile),
                 fileName: Path.GetFileName(untrackedFile),
                 number: "",
@@ -250,6 +251,7 @@ let main = async () => {
                 return false;
             });
             let localDocument = {
+                key: scanDocument.originFileName,
                 name: scanDocument.displayName,
                 fileName: scanDocument.originFileName,
                 number: scanDocument.documentNumber0,
@@ -314,6 +316,7 @@ let main = async () => {
                 return false;
             });
             let localDocument = {
+                key: scanDocument.originFileName,
                 name: scanDocument.displayName,
                 fileName: scanDocument.originFileName,
                 number: scanDocument.documentNumber0,
@@ -378,6 +381,7 @@ let main = async () => {
                 return false;
             });
             let localDocument = {
+                key: scanDocument.originFileName,
                 name: scanDocument.displayName,
                 fileName: scanDocument.originFileName,
                 number: scanDocument.documentNumber0,

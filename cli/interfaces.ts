@@ -10,6 +10,7 @@ export interface IProgresser {
 }
 
 export interface IDocumentRecord {
+    key: string,
     name: string;
     fileName: string;
     number: string;
