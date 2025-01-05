@@ -1,0 +1,5 @@
+{
+    "Name": "interactive-workbench",
+    "Entry": "http://localhost:12332/api/v1/app/home",
+    "Type": "HttpGet"
+}
