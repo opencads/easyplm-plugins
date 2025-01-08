@@ -1,6 +1,5 @@
 import { UTF8Encoding } from "../.tsc/System/Text/UTF8Encoding";
-import { args, setLoggerPath } from "../.tsc/context";
-import { apis } from "../.tsc/Cangjie/TypeSharp/System/apis";
+import { apis, args, setLoggerPath } from "../.tsc/context";
 import { RawJsonDocument, WebMessage } from "../IRawJson";
 import { Json } from "../.tsc/TidyHPC/LiteJson/Json";
 import { DocumentInterface, IWorkspaceGetDocumentsInput, QueryDocumentsByIndexInput, ScanResult } from "./interfaces";
@@ -240,7 +239,7 @@ let main = async () => {
             localDocuments.push(document);
         }
         for (let scanDocument of scanResult.documents) {
-            let rawJsonDocument = scanDocument.rawJson;
+            let rawJsonDocument = scanDocument.rawJsonDocument;
             let attributes = rawJsonDocument.Attributes ?? {};
             let attributeKeys = Object.keys(attributes);
             let children = rawJsonDocument.Children ?? [];
@@ -305,7 +304,7 @@ let main = async () => {
             localDocuments.push(localDocument);
         }
         for (let scanDocument of scanResult.missingDocuments) {
-            let rawJsonDocument = scanDocument.rawJson;
+            let rawJsonDocument = scanDocument.rawJsonDocument;
             let attributes = rawJsonDocument.Attributes ?? {};
             let attributeKeys = Object.keys(attributes);
             let children = rawJsonDocument.Children ?? [];
@@ -370,7 +369,7 @@ let main = async () => {
             localDocuments.push(localDocument);
         }
         for (let scanDocument of scanResult.modifiedDocuments) {
-            let rawJsonDocument = scanDocument.rawJson;
+            let rawJsonDocument = scanDocument.rawJsonDocument;
             let attributes = rawJsonDocument.Attributes ?? {};
             let attributeKeys = Object.keys(attributes);
             let children = rawJsonDocument.Children ?? [];

@@ -1,5 +1,6 @@
 import { DateTime } from "../.tsc/System/DateTime";
 import { Guid } from "../.tsc/System/Guid";
+import { RawJsonDocument } from "../IRawJson";
 
 
 export interface IWorkspaceGetDocumentsInput {
@@ -29,7 +30,7 @@ export interface DocumentInterface {
     createTime: DateTime,
 }
 export interface DocumentWithRawJsonInterface extends DocumentInterface {
-    rawJson: any
+    rawJsonDocument: RawJsonDocument
 }
 
 export interface ScanResult {
