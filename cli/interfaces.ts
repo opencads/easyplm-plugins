@@ -5,7 +5,9 @@ Description:
 
 export interface IProgresser {
     recordByPercent: (percent: number, message: string) => void;
+    recordByPercentWithData: (percent: number, message: string, data: any) => void;
     recordByIncrease: (increase: number, message: string) => void;
+    recordByIncreaseWithData: (increase: number, message: string, data: any) => void;
     getSubProgresserByPercent: (subScope: string, percent: number) => IProgresser;
 }
 

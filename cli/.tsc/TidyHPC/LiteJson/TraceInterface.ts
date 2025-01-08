@@ -1,5 +1,5 @@
 import { Exception } from "../../System/Exception";
-import { Levels } from "../Loggers/Logger+Levels";
+import { Levels } from "../Loggers/LoggerFile+Levels";
 import { Type } from "../../System/Type";
 export class TraceInterface {
     public Error(message?: string, exception?: Exception): void {

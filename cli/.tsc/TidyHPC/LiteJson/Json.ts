@@ -247,6 +247,9 @@ export class Json {
     public static op_Modulus(left?: any, right?: any): any {
         return {} as any;
     }
+    public static op_LogicalNot(value?: any): boolean {
+        return {} as any;
+    }
     public static Null: any;
     public get Node(): any {
         return {} as any;
@@ -325,10 +328,16 @@ export class Json {
     public get AsFloat(): number {
         return {} as any;
     }
+    public get ToFloat(): number {
+        return {} as any;
+    }
     public get IsDouble(): boolean {
         return {} as any;
     }
     public get AsDouble(): number {
+        return {} as any;
+    }
+    public get ToDouble(): number {
         return {} as any;
     }
     public get IsBoolean(): boolean {

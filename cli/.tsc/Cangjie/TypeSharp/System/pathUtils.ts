@@ -1,6 +1,5 @@
-import { DateTime } from "../../../System/DateTime";
 import { Type } from "../../../System/Type";
-export class datetimeUtils {
+export class pathUtils {
     public GetType(): Type {
         return {} as any;
     }
@@ -15,16 +14,19 @@ export class datetimeUtils {
     }
     public constructor() {
     }
-    public static isSameWithSecond(left?: DateTime, right?: DateTime): boolean {
+    public static isEquals(path1?: string, path2?: string): boolean {
         return {} as any;
     }
-    public static isSameWithMillisecond(left?: DateTime, right?: DateTime): boolean {
+    public static isDigitExtension(path?: string): boolean {
         return {} as any;
     }
-    public static getJSTimestamp(dateTime?: DateTime): number {
+    public static getDigitExtension(path?: string): string {
         return {} as any;
     }
-    public static toFormatString(value?: any, format?: string): string {
+    public static removeDigitExtension(path?: string): string {
+        return {} as any;
+    }
+    public static format(path?: string): string {
         return {} as any;
     }
 }

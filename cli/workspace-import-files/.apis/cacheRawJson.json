@@ -1,0 +1,14 @@
+{
+    "Parameters": {
+        "urlPrefix": "http://localhost:19799",
+        "items": [{
+            "contentMD5":"",
+            "rawJson":""
+        }]
+    },
+    "Method": "POST",
+    "Url": "$urlPrefix+`/api/v1/xplm/cacheRawJson`",
+    "Body": {
+        "items": "$items"
+    }
+}

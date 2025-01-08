@@ -46,12 +46,24 @@ Progresser = (progressPath: string, start: number, length: number, scope: string
         let id = Guid.NewGuid().ToString();
         fileUtils.writeLineWithShare(progressPath, `${id} ${JSON.stringify({ DateTime: DateTime.Now.ToString("O"), Scope: scope, Progress: current, Message: message }, null, 0)}`);
     };
+    let recordByPercentWithData = (percent: number, message: string, data: any) => {
+        current = start + length * percent;
+        let id = Guid.NewGuid().ToString();
+        fileUtils.writeLineWithShare(progressPath, `${id} ${JSON.stringify({ DateTime: DateTime.Now.ToString("O"), Scope: scope, Progress: current, Message: message, Data: data }, null, 0)}`);
+    };
+    let recordByIncreaseWithData = (increase: number, message: string, data: any) => {
+        current += increase * length;
+        let id = Guid.NewGuid().ToString();
+        fileUtils.writeLineWithShare(progressPath, `${id} ${JSON.stringify({ DateTime: DateTime.Now.ToString("O"), Scope: scope, Progress: current, Message: message, Data: data }, null, 0)}`);
+    };
     let getSubProgresserByPercent = (subScope: string, percent: number) => {
         return Progresser(progressPath, current, length * percent, subScope);
     };
     return {
         recordByPercent,
         recordByIncrease,
+        recordByPercentWithData,
+        recordByIncreaseWithData,
         getSubProgresserByPercent
     };
 };

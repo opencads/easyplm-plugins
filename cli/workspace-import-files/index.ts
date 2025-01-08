@@ -1,8 +1,8 @@
-import { args, setLoggerPath } from '../.tsc/context';
+import { args, setLoggerPath,apis } from '../.tsc/context';
 import { Json } from '../.tsc/TidyHPC/LiteJson/Json';
 import { DocumentInterface, IImportInput, IImportOutput } from './interfaces';
-import { apis } from '../.tsc/Cangjie/TypeSharp/System/apis';
-import { WebMessage } from '../IRawJson';
+import { Apis } from '../.tsc/Cangjie/TypeSharp/System/Apis';
+import { RawJson, WebMessage } from '../IRawJson';
 import { GetCadVersionOutput } from '../GetCadVersion';
 import { ExportAllInput, ExportAllOutput } from '../ExportAll';
 import { ImportInterface } from '../ImportInterface';
@@ -11,6 +11,9 @@ import { Path } from '../.tsc/System/IO/Path';
 import { File } from '../.tsc/System/IO/File';
 import { UTF8Encoding } from '../.tsc/System/Text/UTF8Encoding';
 import { fileUtils } from '../.tsc/Cangjie/TypeSharp/System/fileUtils';
+import { IProgresser } from '../interfaces';
+import { Guid } from '../.tsc/System/Guid';
+import { DateTime } from '../.tsc/System/DateTime';
 
 let utf8 = new UTF8Encoding(false);
 let parameters = {} as { [key: string]: string };
@@ -31,6 +34,42 @@ for (let i = 0; i < args.length; i++) {
 }
 console.log(parameters);
 
+let Progresser = (progressPath: string, start: number, length: number, scope: string) => {
+    return {} as IProgresser;
+};
+Progresser = (progressPath: string, start: number, length: number, scope: string) => {
+    let current = start;
+    let recordByPercent = (percent: number, message: string) => {
+        current = start + length * percent;
+        let id = Guid.NewGuid().ToString();
+        fileUtils.writeLineWithShare(progressPath, `${id} ${JSON.stringify({ DateTime: DateTime.Now.ToString("O"), Scope: scope, Progress: current, Message: message }, null, 0)}`);
+    };
+    let recordByIncrease = (increase: number, message: string) => {
+        current += increase * length;
+        let id = Guid.NewGuid().ToString();
+        fileUtils.writeLineWithShare(progressPath, `${id} ${JSON.stringify({ DateTime: DateTime.Now.ToString("O"), Scope: scope, Progress: current, Message: message }, null, 0)}`);
+    };
+    let recordByPercentWithData = (percent: number, message: string, data: any) => {
+        current = start + length * percent;
+        let id = Guid.NewGuid().ToString();
+        fileUtils.writeLineWithShare(progressPath, `${id} ${JSON.stringify({ DateTime: DateTime.Now.ToString("O"), Scope: scope, Progress: current, Message: message, Data: data }, null, 0)}`);
+    };
+    let recordByIncreaseWithData = (increase: number, message: string, data: any) => {
+        current += increase * length;
+        let id = Guid.NewGuid().ToString();
+        fileUtils.writeLineWithShare(progressPath, `${id} ${JSON.stringify({ DateTime: DateTime.Now.ToString("O"), Scope: scope, Progress: current, Message: message, Data: data }, null, 0)}`);
+    };
+    let getSubProgresserByPercent = (subScope: string, percent: number) => {
+        return Progresser(progressPath, current, length * percent, subScope);
+    };
+    return {
+        recordByPercent,
+        recordByIncrease,
+        recordByPercentWithData,
+        recordByIncreaseWithData,
+        getSubProgresserByPercent
+    };
+};
 let callPlugin = async (pluginName: string, input: any) => {
     let response = await apis.runAsync("run", {
         PluginName: pluginName,
@@ -81,7 +120,7 @@ let getRawJsonByContentMD5s = async (contentMD5s: string[]) => {
         if (msg.success) {
             return msg.data as {
                 contentMD5: string;
-                rawJson: string | null;
+                rawJson: RawJson | null;
             }[];
         }
         else {
@@ -111,11 +150,33 @@ let importDocuments = async (data: ImportInterface[]) => {
     }
 };
 
+let cacheRawJson = async (items: {
+    contentMD5: string;
+    rawJson: string;
+}[]) => {
+    let response = await apis.runAsync("cacheRawJson", {
+        items
+    });
+    if (response.StatusCode == 200) {
+        let msg = response.Body as WebMessage;
+        if (msg.success) {
+            return msg.data;
+        }
+        else {
+            throw msg.message;
+        }
+    }
+    else {
+        throw `Failed, status code: ${response.StatusCode}`;
+    }
+};
+
 let main = async () => {
     let inputPath = parameters.i ?? parameters.input;
     let outputPath = parameters.o ?? parameters.output;
     let loggerPath = parameters.l ?? parameters.logger;
     let progresserPath = parameters.p ?? parameters.progress ?? parameters.progresser;
+    let progresser = Progresser(progresserPath, 0, 1, "ImportFilesToWorkspace");
     if (inputPath == undefined || inputPath == null) {
         throw "inputPath is required";
     }
@@ -128,25 +189,97 @@ let main = async () => {
 
     let input = Json.Load(inputPath) as IImportInput;
     setLoggerPath(loggerPath);
-    // 先将入参的文件都获取RawJson
+    // 第一步，将文件拷贝到本地工作区
+    let defaultDirectory = await getDefaultDirectory();
+    let formatDefaultDirectory = defaultDirectory.replace('/', '\\');
+    let copyProgresser = progresser.getSubProgresserByPercent("ImportFilesToWorkspace.Copy", 0.1);
+    let copyProgresserStep = 1.0 / input.Items.length;
+    let toImportItems = [] as {
+        sourceFilePath: string;
+        targetFilePath: string;
+        rawJson?: RawJson
+    }[];
+    for (let item of input.Items) {
+        let itemPath = item.FilePath;
+        let itemFormatDirectory = Path.GetDirectoryName(itemPath).replace('/', '\\');
+        if (itemFormatDirectory != formatDefaultDirectory) {
+            // 拷贝文件到默认目录，如果默认目录下文件已存在，则不拷贝
+            let destinationPath = Path.Combine(defaultDirectory, Path.GetFileName(itemPath));
+            if (File.Exists(destinationPath)) {
+                copyProgresser.recordByIncreaseWithData(copyProgresserStep, `Copy file failed, file '${Path.GetFileName(item.FilePath)}' is existed in workspace`, {
+                    FilePath: item.FilePath,
+                    DestinationPath: destinationPath,
+                    Success: false
+                });
+            }
+            else {
+                File.Copy(itemPath, destinationPath);
+                copyProgresser.recordByIncreaseWithData(copyProgresserStep, `Copy file success`, {
+                    FilePath: item.FilePath,
+                    DestinationPath: destinationPath,
+                    Success: true
+                });
+                toImportItems.push({
+                    sourceFilePath: itemPath,
+                    targetFilePath: destinationPath,
+                    rawJson: item.RawJson
+                });
+            }
+        }
+        else {
+            toImportItems.push({
+                sourceFilePath: itemPath,
+                targetFilePath: itemPath,
+                rawJson: item.RawJson
+            });
+        }
+    }
+    // 第二步，如果输入存在RawJson，对RawJson进行缓存
+    let toCacheRawJsons = [] as {
+        contentMD5: string,
+        rawJson: any
+    }[];
+    let toQueryRawJsonContentMD5s = [] as {
+        contentMD5: string;
+        filePath: string;
+    }[];
+    for (let item of toImportItems) {
+        let contentMD5 = fileUtils.md5(item.sourceFilePath);
+        if (item.rawJson) {
+            toCacheRawJsons.push({
+                contentMD5: contentMD5,
+                rawJson: item.rawJson
+            });
+        }
+        else {
+            toQueryRawJsonContentMD5s.push({
+                contentMD5: contentMD5,
+                filePath: item.targetFilePath
+            });
+        }
+    }
+    await cacheRawJson(toCacheRawJsons);
+    // 先将入参的文件(没有RawJson)都获取RawJson
     let exportAllInput = {
         Inputs: []
     } as ExportAllInput;
-    let contentMD5s = input.Items.map(item => {
-        return {
-            contentMD5: fileUtils.md5(item.FilePath),
-            filePath: item.FilePath
-        };
-    });
-    let cacheRawJsons = await getRawJsonByContentMD5s(contentMD5s.map(item => item.contentMD5));
+    let queriedCacheRawJsons = await getRawJsonByContentMD5s(toQueryRawJsonContentMD5s.map(item => item.contentMD5));
     let unCachedFilePaths = [] as string[];
-    for (let item of contentMD5s) {
-        let cachedRawJson = cacheRawJsons.find(x => x.contentMD5 == item.contentMD5);
+    for (let item of toQueryRawJsonContentMD5s) {
+        let cachedRawJson = queriedCacheRawJsons.find(x => x.contentMD5 == item.contentMD5);
         if (cachedRawJson == undefined) {
             throw "Failed to get raw json";
         }
         if (cachedRawJson.rawJson == null) {
             unCachedFilePaths.push(item.filePath);
+        }
+        else {
+            // 补齐toImportItems的RawJson
+            let importItem = toImportItems.find(x => x.targetFilePath == item.filePath);
+            if (importItem == undefined) {
+                throw "Failed to find import input item";
+            }
+            importItem.rawJson = cachedRawJson.rawJson;
         }
     }
     for (let item of unCachedFilePaths) {
@@ -166,30 +299,59 @@ let main = async () => {
     if (exportAllInput.Inputs.length != 0) {
         exportAllOutput = await exportAll(exportAllInput);
     }
-    // 开始构建导入数据
-    let importInput = [] as ImportInterface[];
-    let defaultDirectory = await getDefaultDirectory();
-    let documents = [...exportAllOutput.Documents];
-    for (let item of cacheRawJsons) {
-        if (item.rawJson) {
-            documents.push(JSON.parse(item.rawJson));
+    // 补齐toImportItems的RawJson
+    for (let document of exportAllOutput.Documents) {
+        let importItem = toImportItems.find(x => x.targetFilePath == document.FilePath);
+        if (importItem == undefined) {
+            throw "Failed to find import input item";
+        }
+        if (importItem.rawJson == undefined) {
+            importItem.rawJson = {
+                Documents: [document]
+            } as any;
+        }
+        else {
+            importItem.rawJson.Documents.push(document);
         }
     }
-    for (let document of documents) {
-        let importItem = {} as ImportInterface;
-        importItem.filePath = document.FilePath;
-        importItem.directory = defaultDirectory;
-        importItem.displayName = document.FileName;
-        importItem.documentNumber0 = "";
-        importItem.documentNumber1 = "";
-        importItem.documentNumber2 = "";
-        importItem.partNumber0 = "";
-        importItem.partNumber1 = "";
-        importItem.partNumber2 = "";
-        importItem.documentRemoteID = "";
-        importItem.partRemoteID = "";
-        importItem.rawJson = document;
-        importInput.push(importItem);
+    // 开始构建导入数据
+    let importInput = [] as ImportInterface[];
+    for (let toImportItem of toImportItems) {
+
+        if (toImportItem.rawJson == undefined) {
+            let importItem = {} as ImportInterface;
+            importItem.filePath = toImportItem.targetFilePath;
+            importItem.directory = defaultDirectory;
+            importItem.displayName = Path.GetFileName(toImportItem.targetFilePath);
+            importItem.documentNumber0 = "";
+            importItem.documentNumber1 = "";
+            importItem.documentNumber2 = "";
+            importItem.partNumber0 = "";
+            importItem.partNumber1 = "";
+            importItem.partNumber2 = "";
+            importItem.documentRemoteID = "";
+            importItem.partRemoteID = "";
+            // importItem.rawJson = document;
+            importInput.push(importItem);
+        }
+        else {
+            for (let document of toImportItem.rawJson.Documents) {
+                let importItem = {} as ImportInterface;
+                importItem.filePath = toImportItem.targetFilePath;
+                importItem.directory = defaultDirectory;
+                importItem.displayName = document.FileName;
+                importItem.documentNumber0 = "";
+                importItem.documentNumber1 = "";
+                importItem.documentNumber2 = "";
+                importItem.partNumber0 = "";
+                importItem.partNumber1 = "";
+                importItem.partNumber2 = "";
+                importItem.documentRemoteID = "";
+                importItem.partRemoteID = "";
+                importItem.rawJsonDocument = document;
+                importInput.push(importItem);
+            }
+        }
     }
 
     let importResult = await importDocuments(importInput);
@@ -201,7 +363,7 @@ let main = async () => {
         }
         importOutput.push({
             ...item,
-            rawJson: importInputItem.rawJson
+            rawJsonDocument: importInputItem.rawJsonDocument
         });
     }
     File.WriteAllText(outputPath, JSON.stringify(importOutput), utf8);

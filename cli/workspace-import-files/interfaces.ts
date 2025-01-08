@@ -1,11 +1,12 @@
-import { RawJsonDocument } from "../IRawJson";
+import { RawJson, RawJsonDocument } from "../IRawJson";
 
 export type Guid = string;
 export type DateTime = string;
 
 export interface IImportInput {
     Items: {
-        FilePath: string
+        FilePath: string,
+        RawJson?: RawJson
     }[]
 }
 
@@ -33,5 +34,5 @@ export interface DocumentInterface {
 }
 
 export interface IImportOutput extends DocumentInterface {
-    rawJson:RawJsonDocument
+    rawJsonDocument: RawJsonDocument
 }

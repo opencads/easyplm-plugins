@@ -1,7 +1,7 @@
 export interface ImportInterface {
     filePath?: string,
     directory?: string,
-    rawJson?: any,
+    rawJsonDocument?: any,
     documentNumber0?: string,
     documentNumber1?: string,
     documentNumber2?: string,
