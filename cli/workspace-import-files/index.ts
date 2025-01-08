@@ -225,6 +225,7 @@ let main = async () => {
             else {
                 console.log(`itemFormatDirectory: ${itemFormatDirectory}`);
                 if (itemFormatDirectory == "") {
+                    console.log(`item.Agent: ${item.Agent}`);
                     if (item.Agent) {
                         copyProgresser.recordByIncreaseWithData(copyProgresserStep, `Saving '${Path.GetFileName(item.FilePath)}'`, {
                             FilePath: item.FilePath,
