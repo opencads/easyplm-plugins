@@ -1,5 +1,5 @@
 {
     "Name": "workspace-import-files",
     "Entry": "{.}/index.ts",
-    "Type": "TypeSharp"
+    "Type": "TypeSharp-Progress"
 }
