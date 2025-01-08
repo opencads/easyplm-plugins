@@ -223,6 +223,7 @@ let main = async () => {
                 });
             }
             else {
+                console.log(`itemFormatDirectory: ${itemFormatDirectory}`);
                 if (itemFormatDirectory == "") {
                     if (item.Agent) {
                         copyProgresser.recordByIncreaseWithData(copyProgresserStep, `Saving '${Path.GetFileName(item.FilePath)}'`, {
