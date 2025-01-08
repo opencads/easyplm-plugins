@@ -1,8 +1,8 @@
-import { args, setLoggerPath,apis } from '../.tsc/context';
+import { args, setLoggerPath, apis } from '../.tsc/context';
 import { Json } from '../.tsc/TidyHPC/LiteJson/Json';
 import { DocumentInterface, IImportInput, IImportOutput } from './interfaces';
 import { Apis } from '../.tsc/Cangjie/TypeSharp/System/Apis';
-import { RawJson, WebMessage } from '../IRawJson';
+import { RawJson, RawJsonDocument, WebMessage } from '../IRawJson';
 import { GetCadVersionOutput } from '../GetCadVersion';
 import { ExportAllInput, ExportAllOutput } from '../ExportAll';
 import { ImportInterface } from '../ImportInterface';
@@ -14,6 +14,7 @@ import { fileUtils } from '../.tsc/Cangjie/TypeSharp/System/fileUtils';
 import { IProgresser } from '../interfaces';
 import { Guid } from '../.tsc/System/Guid';
 import { DateTime } from '../.tsc/System/DateTime';
+import { pathUtils } from "../.tsc/Cangjie/TypeSharp/System/pathUtils";
 
 let utf8 = new UTF8Encoding(false);
 let parameters = {} as { [key: string]: string };
@@ -197,7 +198,8 @@ let main = async () => {
     let toImportItems = [] as {
         sourceFilePath: string;
         targetFilePath: string;
-        rawJson?: RawJson
+        rawJson?: RawJson;
+        contentMD5?: string;
     }[];
     for (let item of input.Items) {
         let itemPath = item.FilePath;
@@ -234,7 +236,7 @@ let main = async () => {
             });
         }
     }
-    // 第二步，如果输入存在RawJson，对RawJson进行缓存
+    // 第二步，缓存已知的RawJson，并获取需要查询的文件的ContentMD5
     let toCacheRawJsons = [] as {
         contentMD5: string,
         rawJson: any
@@ -245,6 +247,7 @@ let main = async () => {
     }[];
     for (let item of toImportItems) {
         let contentMD5 = fileUtils.md5(item.sourceFilePath);
+        item.contentMD5 = contentMD5;
         if (item.rawJson) {
             toCacheRawJsons.push({
                 contentMD5: contentMD5,
@@ -299,6 +302,33 @@ let main = async () => {
     if (exportAllInput.Inputs.length != 0) {
         exportAllOutput = await exportAll(exportAllInput);
     }
+    // 缓存导出的RawJson
+    let mapFilePathToDocuments = {} as {
+        [key: string]: RawJsonDocument[]
+    };
+    for (let document of exportAllOutput.Documents) {
+        let filePath = pathUtils.format(document.FilePath);
+        if (mapFilePathToDocuments[filePath] == undefined) {
+            mapFilePathToDocuments[filePath] = [];
+        }
+        mapFilePathToDocuments[filePath].push(document);
+    }
+    toCacheRawJsons = [];
+    let toCacheFilePaths = Object.keys(mapFilePathToDocuments);
+    for (let filePath of toCacheFilePaths) {
+        let contentMD5 = toImportItems.find(x => pathUtils.isEquals(x.targetFilePath, filePath))?.contentMD5;
+        if (contentMD5 == undefined) {
+            contentMD5 = fileUtils.md5(filePath);
+        }
+        let documents = mapFilePathToDocuments[filePath];
+        toCacheRawJsons.push({
+            contentMD5: fileUtils.md5(filePath),
+            rawJson: {
+                Documents: documents
+            }
+        });
+    }
+    await cacheRawJson(toCacheRawJsons);
     // 补齐toImportItems的RawJson
     for (let document of exportAllOutput.Documents) {
         let importItem = toImportItems.find(x => x.targetFilePath == document.FilePath);
