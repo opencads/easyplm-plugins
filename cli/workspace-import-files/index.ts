@@ -291,6 +291,7 @@ let main = async () => {
         }
     }
     // 第二步，缓存已知的RawJson，并获取需要查询的文件的ContentMD5
+    progresser.recordByPercent(0.15, `Computing MD5 of files`);
     let toCacheRawJsons = [] as {
         contentMD5: string,
         rawJson: any
@@ -315,7 +316,9 @@ let main = async () => {
             });
         }
     }
+    progresser.recordByPercent(0.2, `Caching Raw BOM of ${toCacheRawJsons.length} files`);
     await cacheRawJson(toCacheRawJsons);
+    progresser.recordByPercent(0.3, `Cached`);
     // 先将入参的文件(没有RawJson)都获取RawJson
     let exportAllInput = {
         Inputs: []
@@ -354,7 +357,9 @@ let main = async () => {
         Documents: []
     } as ExportAllOutput;
     if (exportAllInput.Inputs.length != 0) {
+        progresser.recordByPercent(0.35, `Exporting Raw BOM of ${exportAllInput.Inputs.length} files`);
         exportAllOutput = await exportAll(exportAllInput);
+        progresser.recordByPercent(0.4, `Exported`);
     }
     // 缓存导出的RawJson
     let mapFilePathToDocuments = {} as {
@@ -382,7 +387,9 @@ let main = async () => {
             }
         });
     }
+    progresser.recordByPercent(0.45, `Caching Raw BOM of ${toCacheFilePaths.length} files`);
     await cacheRawJson(toCacheRawJsons);
+    progresser.recordByPercent(0.5, `Cached`);
     // 补齐toImportItems的RawJson
     for (let document of exportAllOutput.Documents) {
         let importItem = toImportItems.find(x => x.targetFilePath == document.FilePath);
@@ -399,6 +406,7 @@ let main = async () => {
         }
     }
     // 开始构建导入数据
+    progresser.recordByPercent(0.6, `Building import data of ${toImportItems.length} files`);
     let importInput = [] as ImportInterface[];
     for (let toImportItem of toImportItems) {
 
@@ -437,8 +445,11 @@ let main = async () => {
             }
         }
     }
-
+    progresser.recordByPercent(0.7, `Built`);
+    // 开始导入数据
+    progresser.recordByPercent(0.8, `Importing ${importInput.length} files`);
     let importResult = await importDocuments(importInput);
+    progresser.recordByPercent(1, `Imported`);
     let importOutput = [] as IImportOutput[];
     for (let item of importResult) {
         let importInputItem = importInput.find(x => x.displayName == item.displayName);
