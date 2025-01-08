@@ -29,12 +29,14 @@ export interface DocInfo {
     CreateTime?: string; // 应用格式化处理
 }
 
+export interface Agent {
+    Name: "ZWCAD" | "AutoCAD" | "NX" | "Creo" | "Solidworks" | "Catia" | "GStarCAD" | "TGCAD" | "Inventor" | "Mentor" | "Cadence" | "Altium";
+    MajorVersion?: string;
+    MinorVersion?: string;
+}
+
 export interface DocumentProperties {
-    Agent: {
-        Name: "ZWCAD" | "AutoCAD" | "NX" | "Creo" | "Solidworks" | "Catia" | "GStarCAD" | "TGCAD" | "Inventor" | "Mentor" | "Cadence" | "Altium";
-        MajorVersion?: string;
-        MinorVersion?: string;
-    },
+    Agent: Agent,
     PDFPaths?: string[];
     StepPaths?: string[];
     StlPaths?: string[];

@@ -2,7 +2,7 @@ import { args, setLoggerPath, apis } from '../.tsc/context';
 import { Json } from '../.tsc/TidyHPC/LiteJson/Json';
 import { DocumentInterface, IImportInput, IImportOutput } from './interfaces';
 import { Apis } from '../.tsc/Cangjie/TypeSharp/System/Apis';
-import { RawJson, RawJsonDocument, WebMessage } from '../IRawJson';
+import { Agent, RawJson, RawJsonDocument, WebMessage } from '../IRawJson';
 import { GetCadVersionOutput } from '../GetCadVersion';
 import { ExportAllInput, ExportAllOutput } from '../ExportAll';
 import { ImportInterface } from '../ImportInterface';
@@ -92,6 +92,14 @@ let callPlugin = async (pluginName: string, input: any) => {
 
 let exportAll = async (input: ExportAllInput) => {
     return await callPlugin("ExportAll", input) as ExportAllOutput;
+};
+
+let activeDocumentSaveAs = async (agent: Agent, outputPath: string) => {
+    await callPlugin("ActiveDocument", {
+        Option: "SaveAs",
+        Data: outputPath,
+        Agent: agent
+    });
 };
 
 let getDefaultDirectory = async () => {
@@ -208,24 +216,70 @@ let main = async () => {
             // 拷贝文件到默认目录，如果默认目录下文件已存在，则不拷贝
             let destinationPath = Path.Combine(defaultDirectory, Path.GetFileName(itemPath));
             if (File.Exists(destinationPath)) {
-                copyProgresser.recordByIncreaseWithData(copyProgresserStep, `Copy file failed, file '${Path.GetFileName(item.FilePath)}' is existed in workspace`, {
+                copyProgresser.recordByIncreaseWithData(copyProgresserStep, `File '${Path.GetFileName(item.FilePath)}' copy failed, is existed in workspace`, {
                     FilePath: item.FilePath,
                     DestinationPath: destinationPath,
-                    Success: false
+                    Status: 'failed'
                 });
             }
             else {
-                File.Copy(itemPath, destinationPath);
-                copyProgresser.recordByIncreaseWithData(copyProgresserStep, `Copy file success`, {
-                    FilePath: item.FilePath,
-                    DestinationPath: destinationPath,
-                    Success: true
-                });
-                toImportItems.push({
-                    sourceFilePath: itemPath,
-                    targetFilePath: destinationPath,
-                    rawJson: item.RawJson
-                });
+                if (itemFormatDirectory == "") {
+                    if (item.Agent) {
+                        copyProgresser.recordByIncreaseWithData(copyProgresserStep, `Saving '${Path.GetFileName(item.FilePath)}'`, {
+                            FilePath: item.FilePath,
+                            DestinationPath: destinationPath,
+                            Status: 'doing'
+                        });
+                        let saveAsSuccess = false;
+                        try {
+                            await activeDocumentSaveAs(item.Agent, destinationPath);
+                            saveAsSuccess = true;
+                        }
+                        catch (e: any) {
+                            console.log(e);
+                        }
+                        if (saveAsSuccess) {
+                            toImportItems.push({
+                                sourceFilePath: itemPath,
+                                targetFilePath: destinationPath,
+                                rawJson: item.RawJson
+                            });
+                            copyProgresser.recordByIncreaseWithData(copyProgresserStep, `Save '${Path.GetFileName(item.FilePath)}' succeeded`, {
+                                FilePath: item.FilePath,
+                                DestinationPath: destinationPath,
+                                Status: 'succeeded'
+                            });
+                        }
+                        else {
+                            copyProgresser.recordByIncreaseWithData(copyProgresserStep, `Save '${Path.GetFileName(item.FilePath)}' failed`, {
+                                FilePath: item.FilePath,
+                                DestinationPath: destinationPath,
+                                Status: 'failed'
+                            });
+                        }
+
+                    }
+                    else {
+                        copyProgresser.recordByIncreaseWithData(copyProgresserStep, `File '${Path.GetFileName(item.FilePath)}' save failed, unkown cad source`, {
+                            FilePath: item.FilePath,
+                            DestinationPath: destinationPath,
+                            Status: 'failed'
+                        });
+                    }
+                }
+                else {
+                    File.Copy(itemPath, destinationPath);
+                    copyProgresser.recordByIncreaseWithData(copyProgresserStep, `File '${Path.GetFileName(item.FilePath)}' copy succeeded`, {
+                        FilePath: item.FilePath,
+                        DestinationPath: destinationPath,
+                        Status: 'succeeded'
+                    });
+                    toImportItems.push({
+                        sourceFilePath: itemPath,
+                        targetFilePath: destinationPath,
+                        rawJson: item.RawJson
+                    });
+                }
             }
         }
         else {

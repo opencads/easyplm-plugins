@@ -1,4 +1,4 @@
-import { RawJson, RawJsonDocument } from "../IRawJson";
+import { Agent, RawJson, RawJsonDocument } from "../IRawJson";
 
 export type Guid = string;
 export type DateTime = string;
@@ -6,7 +6,8 @@ export type DateTime = string;
 export interface IImportInput {
     Items: {
         FilePath: string,
-        RawJson?: RawJson
+        RawJson?: RawJson,
+        Agent?: Agent
     }[]
 }
 
