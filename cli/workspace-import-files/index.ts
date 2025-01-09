@@ -209,6 +209,11 @@ let main = async () => {
         rawJson?: RawJson;
         contentMD5?: string;
     }[];
+    // -- 找到目标目录不存在的文件
+    let noTargetFilePaths = input.Items.map(item => {
+        let itemPath = item.FilePath;
+        return Path.Combine(defaultDirectory, Path.GetFileName(itemPath));
+    }).filter(item => File.Exists(item) == false);
     for (let item of input.Items) {
         let itemPath = item.FilePath;
         let itemFormatDirectory = Path.GetDirectoryName(itemPath).replace('/', '\\');
@@ -216,11 +221,21 @@ let main = async () => {
             // 拷贝文件到默认目录，如果默认目录下文件已存在，则不拷贝
             let destinationPath = Path.Combine(defaultDirectory, Path.GetFileName(itemPath));
             if (File.Exists(destinationPath)) {
-                copyProgresser.recordByIncreaseWithData(copyProgresserStep, `File '${Path.GetFileName(item.FilePath)}' copy failed, is existed in workspace`, {
-                    FilePath: item.FilePath,
-                    DestinationPath: destinationPath,
-                    Status: 'failed'
-                });
+                if (noTargetFilePaths.includes(destinationPath)) {
+                    toImportItems.push({
+                        sourceFilePath: itemPath,
+                        targetFilePath: destinationPath,
+                        rawJson: item.RawJson
+                    });
+                }
+                else {
+                    copyProgresser.recordByIncreaseWithData(copyProgresserStep, `File '${Path.GetFileName(item.FilePath)}' copy failed, is existed in workspace`, {
+                        FilePath: item.FilePath,
+                        DestinationPath: destinationPath,
+                        Status: 'failed'
+                    });
+                }
+
             }
             else {
                 console.log(`itemFormatDirectory: ${itemFormatDirectory}`);
