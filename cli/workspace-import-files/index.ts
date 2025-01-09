@@ -303,7 +303,7 @@ let main = async () => {
         filePath: string;
     }[];
     for (let item of toImportItems) {
-        let contentMD5 = fileUtils.md5(item.sourceFilePath);
+        let contentMD5 = fileUtils.md5(item.targetFilePath);
         item.contentMD5 = contentMD5;
         if (item.rawJson) {
             toCacheRawJsons.push({
