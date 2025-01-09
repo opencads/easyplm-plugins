@@ -35,39 +35,47 @@ for (let i = 0; i < args.length; i++) {
 }
 console.log(parameters);
 
-let Progresser = (progressPath: string, start: number, length: number, scope: string) => {
+let Progresser = (progressPath: string, start: number, length: number) => {
     return {} as IProgresser;
 };
-Progresser = (progressPath: string, start: number, length: number, scope: string) => {
+Progresser = (progressPath: string, start: number, length: number) => {
     let current = start;
-    let recordByPercent = (percent: number, message: string) => {
-        current = start + length * percent;
-        let id = Guid.NewGuid().ToString();
-        fileUtils.writeLineWithShare(progressPath, `${id} ${JSON.stringify({ DateTime: DateTime.Now.ToString("O"), Scope: scope, Progress: current, Message: message }, null, 0)}`);
+    let recordByPercent = (item: {
+        parentID?: string,
+        id?: string,
+        percent: number,
+        message?: string,
+        status?: 'todo' | 'doing' | 'success' | 'failed',
+        data?: any
+    }) => {
+        current = start + length * item.percent;
+        fileUtils.writeLineWithShare(progressPath, `${Guid.NewGuid().ToString()} ${JSON.stringify({
+            dateTime: DateTime.Now.ToString("O"),
+            progress: current,
+            ...item
+        }, null, 0)}`);
     };
-    let recordByIncrease = (increase: number, message: string) => {
-        current += increase * length;
-        let id = Guid.NewGuid().ToString();
-        fileUtils.writeLineWithShare(progressPath, `${id} ${JSON.stringify({ DateTime: DateTime.Now.ToString("O"), Scope: scope, Progress: current, Message: message }, null, 0)}`);
+    let recordByIncrease = (item: {
+        parentID?: string,
+        id?: string,
+        increase: number,
+        message?: string,
+        status?: 'todo' | 'doing' | 'success' | 'failed',
+        data?: any
+    }) => {
+        current += item.increase * length;
+        fileUtils.writeLineWithShare(progressPath, `${Guid.NewGuid().ToString()} ${JSON.stringify({
+            dateTime: DateTime.Now.ToString("O"),
+            progress: current,
+            ...item
+        }, null, 0)}`);
     };
-    let recordByPercentWithData = (percent: number, message: string, data: any) => {
-        current = start + length * percent;
-        let id = Guid.NewGuid().ToString();
-        fileUtils.writeLineWithShare(progressPath, `${id} ${JSON.stringify({ DateTime: DateTime.Now.ToString("O"), Scope: scope, Progress: current, Message: message, Data: data }, null, 0)}`);
-    };
-    let recordByIncreaseWithData = (increase: number, message: string, data: any) => {
-        current += increase * length;
-        let id = Guid.NewGuid().ToString();
-        fileUtils.writeLineWithShare(progressPath, `${id} ${JSON.stringify({ DateTime: DateTime.Now.ToString("O"), Scope: scope, Progress: current, Message: message, Data: data }, null, 0)}`);
-    };
-    let getSubProgresserByPercent = (subScope: string, percent: number) => {
-        return Progresser(progressPath, current, length * percent, subScope);
+    let getSubProgresserByPercent = (percent: number) => {
+        return Progresser(progressPath, current, length * percent);
     };
     return {
         recordByPercent,
         recordByIncrease,
-        recordByPercentWithData,
-        recordByIncreaseWithData,
         getSubProgresserByPercent
     };
 };
@@ -185,7 +193,7 @@ let main = async () => {
     let outputPath = parameters.o ?? parameters.output;
     let loggerPath = parameters.l ?? parameters.logger;
     let progresserPath = parameters.p ?? parameters.progress ?? parameters.progresser;
-    let progresser = Progresser(progresserPath, 0, 1, "ImportFilesToWorkspace");
+    let progresser = Progresser(progresserPath, 0, 1);
     if (inputPath == undefined || inputPath == null) {
         throw "inputPath is required";
     }
@@ -201,7 +209,7 @@ let main = async () => {
     // 第一步，将文件拷贝到本地工作区
     let defaultDirectory = await getDefaultDirectory();
     let formatDefaultDirectory = defaultDirectory.replace('/', '\\');
-    let copyProgresser = progresser.getSubProgresserByPercent("ImportFilesToWorkspace.Copy", 0.1);
+    let copyProgresser = progresser.getSubProgresserByPercent(0.3);
     let copyProgresserStep = 1.0 / input.Items.length;
     let toImportItems = [] as {
         sourceFilePath: string;
@@ -229,23 +237,25 @@ let main = async () => {
                     });
                 }
                 else {
-                    copyProgresser.recordByIncreaseWithData(copyProgresserStep, `File '${Path.GetFileName(item.FilePath)}' copy failed, is existed in workspace`, {
-                        FilePath: item.FilePath,
-                        DestinationPath: destinationPath,
-                        Status: 'failed'
+                    copyProgresser.recordByIncrease({
+                        increase: copyProgresserStep,
+                        message: `${Path.GetFileName(item.FilePath)} copy failed, is existed in workspace`,
+                        status: 'failed',
+                        data: {}
                     });
                 }
-
             }
             else {
-                console.log(`itemFormatDirectory: ${itemFormatDirectory}`);
                 if (itemFormatDirectory == "") {
                     console.log(`item.Agent: ${item.Agent}`);
                     if (item.Agent) {
-                        copyProgresser.recordByIncreaseWithData(copyProgresserStep, `Saving '${Path.GetFileName(item.FilePath)}'`, {
-                            FilePath: item.FilePath,
-                            DestinationPath: destinationPath,
-                            Status: 'doing'
+                        let progressID = Guid.NewGuid().ToString();
+                        // progressID, copyProgresserStep, `Save ${Path.GetFileName(item.FilePath)}`, 'doing', {}
+                        copyProgresser.recordByIncrease({
+                            id: progressID,
+                            increase: copyProgresserStep,
+                            message: `Save ${Path.GetFileName(item.FilePath)}`,
+                            status: 'doing'
                         });
                         let saveAsSuccess = false;
                         try {
@@ -261,35 +271,47 @@ let main = async () => {
                                 targetFilePath: destinationPath,
                                 rawJson: item.RawJson
                             });
-                            copyProgresser.recordByIncreaseWithData(copyProgresserStep, `Save '${Path.GetFileName(item.FilePath)}' succeeded`, {
-                                FilePath: item.FilePath,
-                                DestinationPath: destinationPath,
-                                Status: 'succeeded'
+                            copyProgresser.recordByIncrease({
+                                id: progressID,
+                                increase: copyProgresserStep,
+                                status: 'success'
                             });
                         }
                         else {
-                            copyProgresser.recordByIncreaseWithData(copyProgresserStep, `Save '${Path.GetFileName(item.FilePath)}' failed`, {
-                                FilePath: item.FilePath,
-                                DestinationPath: destinationPath,
-                                Status: 'failed'
+                            copyProgresser.recordByIncrease({
+                                id: progressID,
+                                increase: copyProgresserStep,
+                                status: 'failed'
+                            });
+                            copyProgresser.recordByIncrease({
+                                parentID: progressID,
+                                increase: copyProgresserStep,
+                                message: `${Path.GetFileName(item.FilePath)} save failed`,
                             });
                         }
 
                     }
                     else {
-                        copyProgresser.recordByIncreaseWithData(copyProgresserStep, `File '${Path.GetFileName(item.FilePath)}' save failed, unkown cad source`, {
-                            FilePath: item.FilePath,
-                            DestinationPath: destinationPath,
-                            Status: 'failed'
+                        copyProgresser.recordByIncrease({
+                            increase: copyProgresserStep,
+                            message: `${Path.GetFileName(item.FilePath)} save failed, unkown cad source`,
+                            status: 'failed'
                         });
                     }
                 }
                 else {
+                    let progressID = Guid.NewGuid().ToString();
+                    copyProgresser.recordByIncrease({
+                        id: progressID,
+                        increase: copyProgresserStep,
+                        message: `Copy ${Path.GetFileName(item.FilePath)}`,
+                        status: 'doing'
+                    });
                     File.Copy(itemPath, destinationPath);
-                    copyProgresser.recordByIncreaseWithData(copyProgresserStep, `File '${Path.GetFileName(item.FilePath)}' copy succeeded`, {
-                        FilePath: item.FilePath,
-                        DestinationPath: destinationPath,
-                        Status: 'succeeded'
+                    copyProgresser.recordByIncrease({
+                        id: progressID,
+                        increase: copyProgresserStep,
+                        status: 'success'
                     });
                     toImportItems.push({
                         sourceFilePath: itemPath,
@@ -308,7 +330,13 @@ let main = async () => {
         }
     }
     // 第二步，缓存已知的RawJson，并获取需要查询的文件的ContentMD5
-    progresser.recordByPercent(0.15, `Computing MD5 of files`);
+    let progressID_ComputeMD5 = Guid.NewGuid().ToString();
+    progresser.recordByPercent({
+        id: progressID_ComputeMD5,
+        percent: 0.35,
+        message: `Compute MD5 of files`,
+        status: 'doing'
+    });
     let toCacheRawJsons = [] as {
         contentMD5: string,
         rawJson: any
@@ -333,9 +361,24 @@ let main = async () => {
             });
         }
     }
-    progresser.recordByPercent(0.2, `Caching Raw BOM of ${toCacheRawJsons.length} files`);
+    progresser.recordByPercent({
+        id: progressID_ComputeMD5,
+        percent: 0.4,
+        status: 'success'
+    });
+    let progressID_CacheRawJson = Guid.NewGuid().ToString();
+    progresser.recordByPercent({
+        id: progressID_CacheRawJson,
+        percent: 0.45,
+        message: `Cache Raw BOM of ${toCacheRawJsons.length} files`,
+        status: 'doing'
+    });
     await cacheRawJson(toCacheRawJsons);
-    // progresser.recordByPercent(0.3, `Cached`);
+    progresser.recordByPercent({
+        id: progressID_CacheRawJson,
+        percent: 0.5,
+        status: 'success'
+    });
     // 先将入参的文件(没有RawJson)都获取RawJson
     let exportAllInput = {
         Inputs: []
@@ -374,9 +417,24 @@ let main = async () => {
         Documents: []
     } as ExportAllOutput;
     if (exportAllInput.Inputs.length != 0) {
-        progresser.recordByPercent(0.35, `Exporting Raw BOM of ${exportAllInput.Inputs.length} files`);
-        exportAllOutput = await exportAll(exportAllInput);
-        // progresser.recordByPercent(0.4, `Exported`);
+        let progressID_ExportAll = Guid.NewGuid().ToString();
+        progresser.recordByPercent({
+            id: progressID_ExportAll,
+            percent: 0.55,
+            message: `Exporting Raw BOM of ${exportAllInput.Inputs.length} files`,
+            status: 'doing'
+        });
+        try {
+            exportAllOutput = await exportAll(exportAllInput);
+        }
+        catch {
+
+        }
+        progresser.recordByPercent({
+            id: progressID_ExportAll,
+            percent: 0.6,
+            status: 'success'
+        });
     }
     // 缓存导出的RawJson
     let mapFilePathToDocuments = {} as {
@@ -405,10 +463,20 @@ let main = async () => {
         });
     }
     if (toCacheRawJsons.length != 0) {
-        progresser.recordByPercent(0.45, `Caching Raw BOM of ${toCacheFilePaths.length} files`);
+        // 0.45, `Caching Raw BOM of ${toCacheFilePaths.length} files`
+        progresser.recordByPercent({
+            id: progressID_CacheRawJson,
+            percent: 0.65,
+            message: `Cache Raw BOM of ${toCacheFilePaths.length} files`,
+            status: 'doing'
+        });
         await cacheRawJson(toCacheRawJsons);
+        progresser.recordByPercent({
+            id: progressID_CacheRawJson,
+            percent: 0.7,
+            status: 'success'
+        });
     }
-    // progresser.recordByPercent(0.5, `Cached`);
     // 补齐toImportItems的RawJson
     for (let document of exportAllOutput.Documents) {
         let importItem = toImportItems.find(x => x.targetFilePath == document.FilePath);
@@ -425,7 +493,14 @@ let main = async () => {
         }
     }
     // 开始构建导入数据
-    progresser.recordByPercent(0.6, `Building import data of ${toImportItems.length} files`);
+    // 0.6, `Building import data of ${toImportItems.length} files`
+    let progressID_BuildImportData = Guid.NewGuid().ToString();
+    progresser.recordByPercent({
+        id: progressID_BuildImportData,
+        percent: 0.75,
+        message: `Build import data of ${toImportItems.length} files`,
+        status: 'doing'
+    });
     let importInput = [] as ImportInterface[];
     for (let toImportItem of toImportItems) {
 
@@ -464,11 +539,25 @@ let main = async () => {
             }
         }
     }
-    // progresser.recordByPercent(0.7, `Built`);
+    progresser.recordByPercent({
+        id: progressID_BuildImportData,
+        percent: 0.8,
+        status: 'success'
+    });
     // 开始导入数据
-    progresser.recordByPercent(0.8, `Importing ${importInput.length} files`);
+    let progressID_ImportData = Guid.NewGuid().ToString();
+    progresser.recordByPercent({
+        id: progressID_ImportData,
+        percent: 0.85,
+        message: `Import ${importInput.length} files`,
+        status: 'doing'
+    });
     let importResult = await importDocuments(importInput);
-    // progresser.recordByPercent(1, ``);
+    progresser.recordByPercent({
+        id: progressID_ImportData,
+        percent: 0.9,
+        status: 'success'
+    });
     let importOutput = [] as IImportOutput[];
     for (let item of importResult) {
         let importInputItem = importInput.find(x => x.displayName == item.displayName);
