@@ -43,10 +43,10 @@ let main = async () => {
         await axios.post(url, {
             defaultDirectory: input.currentValue
         });
-        if (Directory.Exists(input.defaultValue) == false) {
-            Directory.CreateDirectory(input.defaultValue);
-            console.log("create directory: " + input.defaultValue);
-        }
+    }
+    if (Directory.Exists(input.currentValue) == false) {
+        Directory.CreateDirectory(input.currentValue);
+        console.log("create directory: " + input.currentValue);
     }
     File.WriteAllText(outputPath, JSON.stringify({}), utf8);
 };
