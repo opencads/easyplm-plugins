@@ -45,6 +45,7 @@ let main = async () => {
         });
         if (Directory.Exists(input.defaultValue) == false) {
             Directory.CreateDirectory(input.defaultValue);
+            console.log("create directory: " + input.defaultValue);
         }
     }
     File.WriteAllText(outputPath, JSON.stringify({}), utf8);
