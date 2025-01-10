@@ -1,4 +1,4 @@
-import { args, env, script_path, setLoggerPath } from '../.tsc/context';
+import { args, script_path, setLoggerPath } from '../.tsc/context';
 import { axios } from "../.tsc/Cangjie/TypeSharp/System/axios";
 import { UTF8Encoding } from "../.tsc/System/Text/UTF8Encoding";
 import { Json } from "../.tsc/TidyHPC/LiteJson/Json";
@@ -43,6 +43,9 @@ let main = async () => {
         await axios.post(url, {
             defaultDirectory: input.currentValue
         });
+        if (Directory.Exists(input.defaultValue) == false) {
+            Directory.CreateDirectory(input.defaultValue);
+        }
     }
     File.WriteAllText(outputPath, JSON.stringify({}), utf8);
 };
