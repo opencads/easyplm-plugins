@@ -239,6 +239,7 @@ let main = async () => {
                     });
                 }
                 else {
+                    console.log(`${destinationPath} is existed in workspace`);
                     copyProgresser.recordByIncrease({
                         increase: copyProgresserStep,
                         message: `${Path.GetFileName(item.FilePath)} copy failed, is existed in workspace`,
