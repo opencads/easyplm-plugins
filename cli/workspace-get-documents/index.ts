@@ -11,6 +11,7 @@ import { Regex } from "../.tsc/System/Text/RegularExpressions/Regex";
 import { IDocumentRecord, IProgresser } from "../interfaces";
 import { Guid } from "../.tsc/System/Guid";
 import { DateTime } from "../.tsc/System/DateTime";
+import { Directory } from "../.tsc/System/IO/Directory";
 let utf8 = new UTF8Encoding(false);
 let parameters = {} as { [key: string]: string };
 for (let i = 0; i < args.length; i++) {
@@ -195,7 +196,15 @@ let main = async () => {
         message: "正在扫描本地图档"
     });
     let tasks1 = (async () => {
-        let scanResult = await scanDirectory(input.path);
+        let scanResult = {
+            untrackedFiles: [],
+            documents: [],
+            modifiedDocuments: [],
+            missingDocuments: []
+        } as ScanResult;
+        if (Directory.Exists(input.path)) {
+            scanResult = await scanDirectory(input.path)
+        }
         // 0.2, "已扫描完本地图档，正在比对线上图档"
         progresser.recordByIncrease({
             increase: 0.2,
