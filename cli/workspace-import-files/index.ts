@@ -222,6 +222,7 @@ let main = async () => {
         let itemPath = item.FilePath;
         return Path.Combine(defaultDirectory, Path.GetFileName(itemPath));
     }).filter(item => File.Exists(item) == false);
+    console.log(`noTargetFilePaths = ${noTargetFilePaths}`);
     for (let item of input.Items) {
         let itemPath = item.FilePath;
         let itemFormatDirectory = Path.GetDirectoryName(itemPath).replace('/', '\\');
