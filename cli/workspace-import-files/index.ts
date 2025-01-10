@@ -303,14 +303,14 @@ let main = async () => {
                     let progressID = Guid.NewGuid().ToString();
                     copyProgresser.recordByIncrease({
                         id: progressID,
-                        increase: copyProgresserStep,
+                        increase: copyProgresserStep/2,
                         message: `Copy ${Path.GetFileName(item.FilePath)}`,
                         status: 'doing'
                     });
                     File.Copy(itemPath, destinationPath);
                     copyProgresser.recordByIncrease({
                         id: progressID,
-                        increase: copyProgresserStep,
+                        increase: copyProgresserStep/2,
                         status: 'success'
                     });
                     toImportItems.push({
