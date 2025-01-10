@@ -231,6 +231,7 @@ let main = async () => {
             let destinationPath = Path.Combine(defaultDirectory, Path.GetFileName(itemPath));
             if (File.Exists(destinationPath)) {
                 if (noTargetFilePaths.includes(destinationPath)) {
+                    console.log(`noTargetFilePaths contains ${destinationPath}`);
                     toImportItems.push({
                         sourceFilePath: itemPath,
                         targetFilePath: destinationPath,
