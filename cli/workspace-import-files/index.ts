@@ -566,7 +566,8 @@ let main = async () => {
         }
         importOutput.push({
             ...item,
-            rawJsonDocument: importInputItem.rawJsonDocument
+            rawJsonDocument: importInputItem.rawJsonDocument,
+            filePath: importInputItem.filePath ?? ""
         });
     }
     File.WriteAllText(outputPath, JSON.stringify(importOutput), utf8);

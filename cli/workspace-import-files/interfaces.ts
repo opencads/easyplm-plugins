@@ -35,5 +35,6 @@ export interface DocumentInterface {
 }
 
 export interface IImportOutput extends DocumentInterface {
-    rawJsonDocument: RawJsonDocument
+    rawJsonDocument: RawJsonDocument,
+    filePath:string
 }

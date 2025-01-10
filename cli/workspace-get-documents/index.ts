@@ -30,39 +30,47 @@ for (let i = 0; i < args.length; i++) {
 }
 console.log(parameters);
 
-let Progresser = (progressPath: string, start: number, length: number, scope: string) => {
+let Progresser = (progressPath: string, start: number, length: number) => {
     return {} as IProgresser;
 };
-Progresser = (progressPath: string, start: number, length: number, scope: string) => {
+Progresser = (progressPath: string, start: number, length: number) => {
     let current = start;
-    let recordByPercent = (percent: number, message: string) => {
-        current = start + length * percent;
-        let id = Guid.NewGuid().ToString();
-        fileUtils.writeLineWithShare(progressPath, `${id} ${JSON.stringify({ DateTime: DateTime.Now.ToString("O"), Scope: scope, Progress: current, Message: message }, null, 0)}`);
+    let recordByPercent = (item: {
+        parentID?: string,
+        id?: string,
+        percent: number,
+        message?: string,
+        status?: 'todo' | 'doing' | 'success' | 'failed',
+        data?: any
+    }) => {
+        current = start + length * item.percent;
+        fileUtils.writeLineWithShare(progressPath, `${Guid.NewGuid().ToString()} ${JSON.stringify({
+            dateTime: DateTime.Now.ToString("O"),
+            progress: current,
+            ...item
+        }, null, 0)}`);
     };
-    let recordByIncrease = (increase: number, message: string) => {
-        current += increase * length;
-        let id = Guid.NewGuid().ToString();
-        fileUtils.writeLineWithShare(progressPath, `${id} ${JSON.stringify({ DateTime: DateTime.Now.ToString("O"), Scope: scope, Progress: current, Message: message }, null, 0)}`);
+    let recordByIncrease = (item: {
+        parentID?: string,
+        id?: string,
+        increase: number,
+        message?: string,
+        status?: 'todo' | 'doing' | 'success' | 'failed',
+        data?: any
+    }) => {
+        current += item.increase * length;
+        fileUtils.writeLineWithShare(progressPath, `${Guid.NewGuid().ToString()} ${JSON.stringify({
+            dateTime: DateTime.Now.ToString("O"),
+            progress: current,
+            ...item
+        }, null, 0)}`);
     };
-    let recordByPercentWithData = (percent: number, message: string, data: any) => {
-        current = start + length * percent;
-        let id = Guid.NewGuid().ToString();
-        fileUtils.writeLineWithShare(progressPath, `${id} ${JSON.stringify({ DateTime: DateTime.Now.ToString("O"), Scope: scope, Progress: current, Message: message, Data: data }, null, 0)}`);
-    };
-    let recordByIncreaseWithData = (increase: number, message: string, data: any) => {
-        current += increase * length;
-        let id = Guid.NewGuid().ToString();
-        fileUtils.writeLineWithShare(progressPath, `${id} ${JSON.stringify({ DateTime: DateTime.Now.ToString("O"), Scope: scope, Progress: current, Message: message, Data: data }, null, 0)}`);
-    };
-    let getSubProgresserByPercent = (subScope: string, percent: number) => {
-        return Progresser(progressPath, current, length * percent, subScope);
+    let getSubProgresserByPercent = (percent: number) => {
+        return Progresser(progressPath, current, length * percent);
     };
     return {
         recordByPercent,
         recordByIncrease,
-        recordByPercentWithData,
-        recordByIncreaseWithData,
         getSubProgresserByPercent
     };
 };
@@ -166,7 +174,7 @@ let main = async () => {
     let outputPath = parameters.o ?? parameters.output;
     let loggerPath = parameters.l ?? parameters.logger;
     let progresserPath = parameters.p ?? parameters.progress ?? parameters.progresser;
-    let progresser = Progresser(progresserPath, 0, 1, "GetWorkSpaceDocuments");
+    let progresser = Progresser(progresserPath, 0, 1);
     if (inputPath == undefined || inputPath == null) {
         throw "inputPath is required";
     }
@@ -181,10 +189,18 @@ let main = async () => {
     setLoggerPath(loggerPath);
     let localDocuments = [] as IDocumentRecord[];
     let remoteDocuments = [] as IDocumentRecord[];
-    progresser.recordByPercent(0.2, "正在扫描本地图档");
+    // 0.2, "正在扫描本地图档"
+    progresser.recordByPercent({
+        percent: 0.2,
+        message: "正在扫描本地图档"
+    });
     let tasks1 = (async () => {
         let scanResult = await scanDirectory(input.path);
-        progresser.recordByIncrease(0.2, "已扫描完本地图档，正在比对线上图档");
+        // 0.2, "已扫描完本地图档，正在比对线上图档"
+        progresser.recordByIncrease({
+            increase: 0.2,
+            message: "已扫描完本地图档，正在比对线上图档"
+        });
         let queryInput = {
             FileNames: [],
             DocumentNumbers: [],
@@ -205,7 +221,11 @@ let main = async () => {
             }
         }
         let queryDocuments = await queryDocumentsByIndex(queryInput);
-        progresser.recordByIncrease(0.2, "已比对完线上图档");
+        // 0.2, "已比对完线上图档"
+        progresser.recordByIncrease({
+            increase: 0.2,
+            message: "已比对完线上图档"
+        });
         for (let untrackedFile of scanResult.untrackedFiles) {
             let document = {
                 key: Path.GetFileName(untrackedFile),
@@ -441,10 +461,18 @@ let main = async () => {
         catch {
 
         }
-        progresser.recordByIncrease(0.2, "已获取系统工作区文档列表");
+        // 0.2, "已获取系统工作区文档列表"
+        progresser.recordByIncrease({
+            increase: 0.2,
+            message: "已获取系统工作区文档列表"
+        });
     })();
     await taskUtils.whenAll([tasks1, tasks2]);
-    progresser.recordByPercent(0.9, "获取文档列表完成");
+    // 0.9, "获取文档列表完成"
+    progresser.recordByPercent({
+        percent: 0.9,
+        message: "获取文档列表完成"
+    });
     let resultDocuments = [] as IDocumentRecord[];
     output.Documents = resultDocuments;
     let toQueryDocuments = [] as IDocumentRecord[];
@@ -470,7 +498,11 @@ let main = async () => {
     remoteDocuments.forEach(item => {
         resultDocuments.push(item);
     });
-    progresser.recordByPercent(1, "完成");
+    // 1, "完成"
+    progresser.recordByPercent({
+        percent: 1,
+        message: "完成"
+    });
     (output as Json).Save(outputPath);
 };
 
