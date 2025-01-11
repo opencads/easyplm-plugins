@@ -1,5 +1,5 @@
 {
-    "Name":"set-settings-cache",
-    "Entry":"{userprofile}\\.xplm\\cache\\settingsCache.json",
-    "Type":"FileWrite"
+    "Name": "set-settings-cache",
+    "Entry": "{userprofile}\\.easyplm\\cache\\settingsCache.json",
+    "Type": "FileWrite"
 }

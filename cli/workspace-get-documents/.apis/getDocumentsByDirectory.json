@@ -4,7 +4,7 @@
         "directory": ""
     },
     "Method": "GET",
-    "Url": "$urlPrefix+`/api/v1/xplm/getDocumentsByDirectory`",
+    "Url": "$urlPrefix+`/api/v1/easyplm/getDocumentsByDirectory`",
     "QueryParameters": {
         "directory": "$directory"
     }

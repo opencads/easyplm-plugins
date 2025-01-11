@@ -1,6 +1,6 @@
 /*
 Description:
-    该文件主要是描述xplm中标准的接口，用于与插件进行交互。
+    该文件主要是描述easyplm中标准的接口，用于与插件进行交互。
 */
 
 export interface IProgresser {

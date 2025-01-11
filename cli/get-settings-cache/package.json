@@ -1,5 +1,5 @@
 {
-    "Name":"get-settings-cache",
-    "Entry":"{userprofile}\\.xplm\\cache\\settingsCache.json",
-    "Type":"FileRead"
+    "Name": "get-settings-cache",
+    "Entry": "{userprofile}\\.easyplm\\cache\\settingsCache.json",
+    "Type": "FileRead"
 }

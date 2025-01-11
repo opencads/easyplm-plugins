@@ -1,5 +1,5 @@
 {
     "Name": "set-login-info",
-    "Entry": "{userprofile}\\.xplm\\cache\\loginCache.json",
+    "Entry": "{userprofile}\\.easyplm\\cache\\loginCache.json",
     "Type": "FileWrite"
 }

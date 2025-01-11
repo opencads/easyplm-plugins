@@ -1,5 +1,5 @@
 {
     "Name": "get-default-directory",
-    "Entry": "http://localhost:19799/api/v1/xplm/getDefaultDirectory",
+    "Entry": "http://localhost:19799/api/v1/easyplm/getDefaultDirectory",
     "Type": "HttpGet"
 }

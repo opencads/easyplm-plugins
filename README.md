@@ -1,1 +1,1 @@
-# xplm-plugins
+# easyplm-plugins

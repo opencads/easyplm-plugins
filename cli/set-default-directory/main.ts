@@ -38,7 +38,7 @@ let main = async () => {
         throw "loggerPath is required";
     }
     let input = Json.Load(inputPath) as any;
-    let url = `http://localhost:19799/api/v1/xplm/setDefaultDirectory`;
+    let url = `http://localhost:19799/api/v1/easyplm/setDefaultDirectory`;
     if (input.currentValue && (input.defaultValue) && (input.currentValue != input.defaultValue)) {
         await axios.post(url, {
             defaultDirectory: input.currentValue

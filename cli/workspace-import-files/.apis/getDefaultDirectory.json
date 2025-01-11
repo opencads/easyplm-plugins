@@ -3,5 +3,5 @@
         "urlPrefix": "http://localhost:19799"
     },
     "Method": "GET",
-    "Url": "$urlPrefix+`/api/v1/xplm/getDefaultDirectory`"
+    "Url": "$urlPrefix+`/api/v1/easyplm/getDefaultDirectory`"
 }

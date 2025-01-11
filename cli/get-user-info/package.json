@@ -1,5 +1,5 @@
 {
     "Name": "get-user-info",
-    "Entry": "{userprofile}/.xplm/cache/login.json",
+    "Entry": "{userprofile}/.easyplm/cache/login.json",
     "Type": "FileRead"
 }

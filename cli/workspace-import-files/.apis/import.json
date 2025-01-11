@@ -4,7 +4,7 @@
         "data": ""
     },
     "Method": "POST",
-    "Url": "$urlPrefix+`/api/v1/xplm/import`",
+    "Url": "$urlPrefix+`/api/v1/easyplm/import`",
     "Body": {
         "data": "$data"
     }

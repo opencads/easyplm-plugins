@@ -44,7 +44,7 @@ let main = async () => {
         let defaultValue = input.defaultValue as LocalSubscriber[];
         let deleted = defaultValue.filter(x => !currentValue.some(y => y.name == x.name));
         for (let item of deleted) {
-            await axios.post(`http://localhost:19799/api/v1/xplm/removeLocalSubscriber`, {
+            await axios.post(`http://localhost:19799/api/v1/easyplm/removeLocalSubscriber`, {
                 name: item.name
             });
         }

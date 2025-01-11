@@ -1,5 +1,5 @@
 {
     "Name": "get-subscribers",
-    "Entry": "http://localhost:19799/api/v1/xplm/getPluginSubscribers",
+    "Entry": "http://localhost:19799/api/v1/easyplm/getPluginSubscribers",
     "Type": "HttpGet"
 }

@@ -38,7 +38,7 @@ let main = async () => {
         throw "loggerPath is required";
     }
     let input = Json.Load(inputPath) as any;
-    let url = `http://localhost:19799/api/v1/xplm/setPluginSubscribers`;
+    let url = `http://localhost:19799/api/v1/easyplm/setPluginSubscribers`;
     if (input.currentValue && (input.defaultValue) && (JSON.stringify(input.currentValue) != JSON.stringify(input.defaultValue))) {
         await axios.post(url, {
             subscribers: input.currentValue
