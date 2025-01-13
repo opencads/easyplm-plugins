@@ -1,5 +1,5 @@
 {
-    "Name": "documents-layout-get",
+    "Name": "layout-documents-get",
     "Entry": "{.}/layout.json",
     "Type": "FileRead",
     "Priority": -1
