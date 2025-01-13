@@ -23,23 +23,28 @@ export interface IProgresser {
     getSubProgresserByPercent: (percent: number) => IProgresser;
 }
 
+export type IDocumentRemoteState = 'new' | 'checkedIn' | 'checkedOut' | 'unknown';
+
+export type IDocumentWorkspaceState = 'untracked' | 'modified' | 'archived' | 'missing' | 'todownload';
+
 export interface IDocumentRecord {
     key: string,
-    name: string;
-    fileName: string;
-    number: string;
-    partNumber: string;
-    remote: {
+    name?: string;
+    fileName?: string;
+    number?: string;
+    partNumber?: string;
+    remote?: {
         success: boolean;
-        remoteState: 'new' | 'checkedIn' | 'checkedOut' | 'unknown';
-        remoteLastModifiedTime: string;
-        lifeCycle: string;
-        remoteAttributes: {
+        remoteState?: IDocumentRemoteState;
+        remoteLastModifiedTime?: string;
+        lifeCycle?: string;
+        version?: string;
+        remoteAttributes?: {
             key: string,
             value: string,
             type: string
         }[];
-        remoteChildren: {
+        remoteChildren?: {
             fileName: string,
             name: string,
             number: string,
@@ -47,22 +52,22 @@ export interface IDocumentRecord {
         }[];
         raw?: any
     },
-    local: {
+    local?: {
         success: boolean;
-        workspaceState: 'untracked' | 'modified' | 'archived' | 'missing' | 'todownload';
-        localFilePath: string;
-        localAttributes: {
+        workspaceState?: IDocumentWorkspaceState;
+        localFilePath?: string;
+        localAttributes?: {
             key: string,
             value: string,
             type: string
         }[];
-        localChildren: {
+        localChildren?: {
             fileName: string,
             name: string,
             number: string,
             partNumber: string
         }[];
-        localLastModifiedTime: string;
+        localLastModifiedTime?: string;
         raw?: any
     };
 }
