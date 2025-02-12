@@ -1,4 +1,5 @@
 import { DateTime } from "../../../System/DateTime";
+import { TimeSpan } from "../../../System/TimeSpan";
 import { Type } from "../../../System/Type";
 export class datetimeUtils {
     public GetType(): Type {
@@ -24,7 +25,19 @@ export class datetimeUtils {
     public static getJSTimestamp(dateTime?: DateTime): number {
         return {} as any;
     }
+    public static fromJSTimestamp(timestamp?: number): DateTime {
+        return {} as any;
+    }
     public static toFormatString(value?: any, format?: string): string {
+        return {} as any;
+    }
+    public static add(value?: DateTime, timeSpan?: TimeSpan): DateTime {
+        return {} as any;
+    }
+    public static subtract(value?: DateTime, timeSpan?: TimeSpan): DateTime {
+        return {} as any;
+    }
+    public static parse(value?: any): DateTime {
         return {} as any;
     }
 }

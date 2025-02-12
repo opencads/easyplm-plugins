@@ -1,4 +1,4 @@
-import { context } from "./context";
+import { Context } from "./Context";
 import { String } from "../../../System/String";
 import { Type } from "../../../System/Type";
 export class Apis {
@@ -29,9 +29,9 @@ export class Apis {
     public GetHashCode(): number {
         return {} as any;
     }
-    public constructor(context?: context) {
+    public constructor(context?: Context) {
     }
-    public get context(): context {
+    public get context(): Context {
         return {} as any;
     }
     public get directory(): string {

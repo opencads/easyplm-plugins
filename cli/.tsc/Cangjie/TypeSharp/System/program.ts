@@ -1,16 +1,9 @@
 import { Type } from "../../../System/Type";
-import { Context } from "./Context";
-export class Consoles {
-    public log(values?: any[]): void {
-        return {} as any;
-    }
-    public error(values?: any[]): void {
-        return {} as any;
-    }
-    public debug(values?: any[]): void {
-        return {} as any;
-    }
+export class program {
     public Dispose(): void {
+        return {} as any;
+    }
+    public runAsync(args?: string[]): Promise<void> {
         return {} as any;
     }
     public GetType(): Type {
@@ -25,6 +18,9 @@ export class Consoles {
     public GetHashCode(): number {
         return {} as any;
     }
-    public constructor(context?: Context) {
+    public constructor(filePath?: string) {
+    }
+    public static load(filePath?: string): program {
+        return {} as any;
     }
 }

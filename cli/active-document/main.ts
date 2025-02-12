@@ -1,4 +1,4 @@
-import { args, exec, execAsync, cmd, cmdAsync, start, startCmd, copyDirectory, setLoggerPath } from "../.tsc/context";
+import { apis, args, setLoggerPath } from "../.tsc/Context";
 import { Environment } from "../.tsc/System/Environment";
 import { Directory } from "../.tsc/System/IO/Directory";
 import { Path } from "../.tsc/System/IO/Path";
@@ -7,7 +7,6 @@ import { UTF8Encoding } from "../.tsc/System/Text/UTF8Encoding";
 import { Server } from "../.tsc/Cangjie/TypeSharp/System/Server";
 import { Json } from "../.tsc/TidyHPC/LiteJson/Json";
 import { RawJson, WebMessage } from "../IRawJson";
-import { apis } from "../.tsc/Cangjie/TypeSharp/System/apis";
 import { GetCadVersionInput, GetCadVersionOutput } from "../GetCadVersion";
 import { ActiveDocumentInput } from "./ActiveDocument";
 

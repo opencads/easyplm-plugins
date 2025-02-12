@@ -116,6 +116,12 @@ export class Json {
     public Reverse(): any {
         return {} as any;
     }
+    public Concat(items?: any[]): any {
+        return {} as any;
+    }
+    public RemoveAt(index?: number): void {
+        return {} as any;
+    }
     public Remove(key?: any): void {
         return {} as any;
     }
@@ -156,6 +162,9 @@ export class Json {
         return {} as any;
     }
     public Read(key?: string, defaultValue?: string | number | boolean | Guid | TimeSpan | DateTime): string | number | boolean | Guid | TimeSpan | DateTime {
+        return {} as any;
+    }
+    public ReadWithKeys(keys?: string[], defaultValue?: string): string {
         return {} as any;
     }
     public ContainsKey(key?: string): boolean {

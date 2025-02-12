@@ -17,4 +17,7 @@ export class Object {
     public static keys(value?: any): string[] {
         return {} as any;
     }
+    public static values(value?: any): any {
+        return {} as any;
+    }
 }
